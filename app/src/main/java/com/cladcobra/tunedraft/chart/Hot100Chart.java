@@ -2,12 +2,12 @@ package com.cladcobra.tunedraft.chart;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class Hot100Chart {
 
     private String date;
-    private List<Hot100ChartData> data;
+    private ArrayList<Hot100ChartData> data;
 
     // getters and setters
     public String getDate() {
@@ -22,13 +22,13 @@ public class Hot100Chart {
 
     }
 
-    public List<Hot100ChartData> getData() {
+    public ArrayList<Hot100ChartData> getData() {
 
         return data;
 
     }
 
-    public void setData(List<Hot100ChartData> data) {
+    public void setData(ArrayList<Hot100ChartData> data) {
 
         this.data = data;
 

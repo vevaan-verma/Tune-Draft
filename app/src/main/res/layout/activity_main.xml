@@ -18,18 +18,25 @@
             android:gravity="center">
 
         <Button
+                android:text="Clear Data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/clearDataButton"
+                android:backgroundTint="#4CAF50" />
+
+        <Button
                 android:text="Get Tune"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/addDraftsButton"
-                android:backgroundTint="#B84D4D" />
+                android:backgroundTint="#F44336" />
 
         <Button
                 android:text="@string/billboard_hot_100"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/billboardHot100"
-                android:backgroundTint="#D9B64E" />
+                android:backgroundTint="#FFC107" />
 
     </LinearLayout>
 

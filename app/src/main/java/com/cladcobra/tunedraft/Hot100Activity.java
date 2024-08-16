@@ -1,39 +1,57 @@
 package com.cladcobra.tunedraft;
 
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Space;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.cladcobra.tunedraft.chart.Hot100Chart;
+import com.cladcobra.tunedraft.database.Song;
+import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.database.listener.GetAllSongsListener;
+import com.cladcobra.tunedraft.database.listener.IsSongExistsListener;
 import com.google.gson.Gson;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Hot100Activity extends AppCompatActivity {
 
+    private static final int MAX_SONG_CHARS = 25;
+    private static final int MAX_ARTIST_CHARS = 20;
+
+    private SongDatabase songDatabase;
     private SharedPreferences sharedPrefs;
-    private ArrayList<Button> draftButtons;
+    private HashMap<Button, Song> draftButtons;
     private TextView tunesRemainingText;
     private ProgressBar progressBar;
 
@@ -52,11 +70,32 @@ public class Hot100Activity extends AppCompatActivity {
 
         });
 
-        draftButtons = new ArrayList<>();
+        /* DATABASE INITIALIZATION */
+        RoomDatabase.Callback callback = new RoomDatabase.Callback() {
+
+            @Override
+            public void onCreate(@NotNull SupportSQLiteDatabase db) {
+
+                super.onCreate(db);
+
+            }
+
+            @Override
+            public void onOpen(@NotNull SupportSQLiteDatabase db) {
+
+                super.onOpen(db);
+
+            }
+        };
+        songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
+                .addCallback(callback)
+                .build();
+
+        draftButtons = new HashMap<>();
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
 
         // set element variables
-        tunesRemainingText = findViewById(R.id.tunesRemainingText);
+        tunesRemainingText = findViewById(R.id.draftsRemainingText);
         progressBar = findViewById(R.id.progressBar);
 
         updateTunesRemaining(); // updates tunes remaining text
@@ -131,18 +170,20 @@ public class Hot100Activity extends AppCompatActivity {
 
         for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
 
+            Song song = new Song(chartData.getSongName(), chartData.getArtist());
+
             LinearLayout innerLayout = getInnerLayout(chartData); // inner linear vertical layout
-            LinearLayout outerLayout = getOuterLayout(innerLayout, rank); // outer linear horizontal layout
+            ConstraintLayout outerLayout = getOuterLayout(innerLayout, song, rank); // outer linear horizontal layout
 
             songListLayout.addView(outerLayout); // add outer layout to song list layout
 
             // add space between each song element
             Space space = new Space(this);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     64 // height of space in dp
             );
-            space.setLayoutParams(params);
+            space.setLayoutParams(spaceParams);
             songListLayout.addView(space);
 
             rank++; // increment rank
@@ -151,22 +192,28 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     /* RANK & SONG INFO CONTAINER */
-    private LinearLayout getOuterLayout(LinearLayout innerLayout, int rank) {
+    private ConstraintLayout getOuterLayout(LinearLayout innerLayout, Song song, int rank) {
 
-        LinearLayout outerLayout = new LinearLayout(this);
-        outerLayout.setOrientation(LinearLayout.HORIZONTAL);
-        outerLayout.setBackgroundColor(Color.argb(255, 0, 0, 0));
-        outerLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.song_bg));
-        outerLayout.setGravity(Gravity.CENTER_VERTICAL);
+        ConstraintLayout outerLayout = new ConstraintLayout(this);
+        outerLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.song_info_bg));
 
         // hot 100 rank text
         TextView hot100Rank = new TextView(this);
         hot100Rank.setText(String.format("%s", rank));
         hot100Rank.setPadding(48, 0, 0, 0);
+        hot100Rank.setId(View.generateViewId()); // set id for constraint layout
         hot100Rank.setTextSize(30);
 
-        Button button = getDraftButton(); // button to draft tune
-        draftButtons.add(button); // add button to list of draft buttons
+        // constrain inner layout to the right of hot 100 rank
+        ConstraintLayout.LayoutParams innerLayoutParams = new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+        );
+        innerLayoutParams.startToEnd = hot100Rank.getId();
+        innerLayout.setLayoutParams(innerLayoutParams);
+
+        Button button = getDraftButton(song); // button to draft tune
+        draftButtons.put(button, song); // add button & its song to hashmap of draft buttons
 
         outerLayout.addView(hot100Rank);
         outerLayout.addView(innerLayout); // add inner layout to outer layout
@@ -176,19 +223,37 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    private Button getDraftButton() {
+    private Button getDraftButton(Song song) {
 
         // TODO: find more efficient way to store tunes remaining?
 
         Button button = new Button(this);
         button.setText(R.string.draft_tune_text);
+        button.setBackground(AppCompatResources.getDrawable(this, R.drawable.draft_button_bg));
+
+        // constrain draft button to the right/end
+        ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+        );
+        buttonParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        buttonParams.rightMargin = 48;
+        button.setLayoutParams(buttonParams);
 
         AtomicInteger tunesRemaining = new AtomicInteger(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
 
         // disable all buttons if no tunes drafts remain
         if (tunesRemaining.get() == 0)
-            for (Button draftButton : draftButtons)
-                draftButton.setEnabled(false);
+            draftButtons.forEach(
+                    (key, value) -> key.setEnabled(false)
+            );
+
+        // check if song already exists in database and disable button if it does
+        isSongExistsInBackground(song, songExists -> {
+
+            if (songExists) button.setEnabled(false);
+
+        });
 
         button.setOnClickListener(v -> {
 
@@ -198,8 +263,12 @@ public class Hot100Activity extends AppCompatActivity {
 
                 // disable all buttons if no tunes drafts remain
                 if (tunesRemaining.get() == 1) // this would mean there are no tunes remaining now
-                    for (Button draftButton : draftButtons)
-                        draftButton.setEnabled(false);
+                    draftButtons.forEach(
+                            (key, value) -> key.setEnabled(false)
+                    );
+
+                addSongInBackground(song); // add song to database
+                button.setEnabled(false); // disable button after drafting tune to prevent multiple drafts
 
                 sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), tunesRemaining.get() - 1).apply();
                 updateTunesRemaining();
@@ -219,13 +288,24 @@ public class Hot100Activity extends AppCompatActivity {
 
         // song name text
         TextView songName = new TextView(this);
-        songName.setText(chartData.getSongName());
+        String song = chartData.getSongName();
+
+        if (song.length() > MAX_SONG_CHARS)
+            song = song.substring(0, MAX_SONG_CHARS) + "...";
+
+        songName.setText(song);
         songName.setPadding(48, 0, 0, 0);
         songName.setTextSize(20);
 
         // artist name text
         TextView artistName = new TextView(this);
-        artistName.setText(chartData.getArtist());
+        String artist = chartData.getArtist().replace("Featuring", "ft.");
+
+        if (artist.length() > MAX_ARTIST_CHARS)
+            artist = artist.substring(0, MAX_ARTIST_CHARS) + "...";
+
+        artistName.setText(artist);
+        // TODO: cut off artist name if too long
         artistName.setPadding(48, 0, 0, 0);
 
         // add song and artist to layout
@@ -235,27 +315,52 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
+    /* UI UTILS */
     private void updateTunesRemaining() {
 
         int tunesRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
-        tunesRemainingText.setText(String.format(getString(R.string.tunes_remaining) + " %d", tunesRemaining));
+        tunesRemainingText.setText(String.format(getString(R.string.drafts_remaining) + " %d", tunesRemaining));
 
     }
 
-    private void saveData() {
+    /* DATABASE UTILS */
+    private void addSongInBackground(Song song) {
 
-//        FeedReaderDbHelper dbHelper = new FeedReaderDbHelper(this);
-//
-//        // gets the data repository in write mode
-//        SQLiteDatabase db = dbHelper.getWritableDatabase();
-//
-//        // create a new map of values, where column names are the keys
-//        ContentValues values = new ContentValues();
-//        values.put(FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE, title);
-//        values.put(FeedReaderContract.FeedEntry.COLUMN_NAME_SUBTITLE, subtitle);
-//
-//        // insert the new row, returning the primary key value of the new row
-//        long newRowId = db.insert(FeedReaderContract.FeedEntry.TABLE_NAME, null, values);
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
 
+        executorService.execute(() -> {
+
+            songDatabase.getSongDAO().addSong(song);
+            handler.post(() -> Toast.makeText(this, "Song added to database", Toast.LENGTH_SHORT).show());
+
+        });
     }
+
+    private void getSongsInBackground(GetAllSongsListener listener) {
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        executorService.execute(() -> {
+
+            List<Song> songs = songDatabase.getSongDAO().getAllSongs();
+            handler.post(() -> listener.onGetAllSongs(songs));
+
+        });
+    }
+
+    private void isSongExistsInBackground(Song song, IsSongExistsListener listener) {
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        executorService.execute(() -> {
+
+            boolean songExists = songDatabase.getSongDAO().isSongExists(song.getName(), song.getArtist());
+            handler.post(() -> listener.onIsSongExists(songExists));
+
+        });
+    }
+
 }

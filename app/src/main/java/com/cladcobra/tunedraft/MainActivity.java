@@ -11,6 +11,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import com.cladcobra.tunedraft.database.SongDatabase;
+
+import org.jetbrains.annotations.NotNull;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,7 +38,37 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+        /* DATABASE INITIALIZATION */
+        RoomDatabase.Callback callback = new RoomDatabase.Callback() {
+
+            @Override
+            public void onCreate(@NotNull SupportSQLiteDatabase db) {
+
+                super.onCreate(db);
+
+            }
+
+            @Override
+            public void onOpen(@NotNull SupportSQLiteDatabase db) {
+
+                super.onOpen(db);
+
+            }
+        };
+
+        SongDatabase songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
+                .addCallback(callback)
+                .build();
+
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
+
+        Button clearDataButton = findViewById(R.id.clearDataButton);
+        clearDataButton.setOnClickListener(v -> {
+
+            sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), 0).apply();
+            this.deleteDatabase("song-database");
+
+        });
 
         Button addDraftsButton = findViewById(R.id.addDraftsButton);
         addDraftsButton.setOnClickListener(v -> AddTuneDraft());
