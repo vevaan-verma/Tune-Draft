@@ -18,10 +18,10 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-            android:text="@string/drafts_remaining"
+            android:text="@string/drafts_remaining_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/draftsRemainingText"
+            android:id="@+id/inventoryText"
             android:layout_weight="1"
             android:fontFamily="sans-serif-smallcaps"
             android:textSize="26sp"
@@ -50,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:id="@+id/songLayout" />
+                android:id="@+id/songListLayout" />
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

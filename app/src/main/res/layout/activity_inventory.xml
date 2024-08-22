@@ -7,4 +7,39 @@
         android:layout_height="match_parent"
         tools:context=".InventoryActivity">
 
+    <TextView
+            android:text="@string/inventory_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/inventoryText"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-smallcaps"
+            android:textSize="26sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/scrollView"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="center" />
+
+    <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/scrollView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="64dp"
+            android:layout_marginBottom="32dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:id="@+id/inventoryLayout" />
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

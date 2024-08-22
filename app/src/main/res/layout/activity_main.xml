@@ -22,21 +22,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/clearDataButton"
-                android:backgroundTint="#4CAF50" />
+                android:backgroundTint="#8BC34A" />
 
         <Button
-                android:text="Get Tune"
+                android:text="Add Draft"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/addDraftsButton"
-                android:backgroundTint="#F44336" />
+                android:backgroundTint="#FF5722" />
 
         <Button
-                android:text="@string/billboard_hot_100"
+                android:text="@string/billboard_hot_100_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/billboardHot100"
+                android:id="@+id/billboardHot100Button"
                 android:backgroundTint="#FFC107" />
+
+        <Button
+                android:text="@string/inventory_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/inventoryButton"
+                android:backgroundTint="#00BCD4" />
 
     </LinearLayout>
 

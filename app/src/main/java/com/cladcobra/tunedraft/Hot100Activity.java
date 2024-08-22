@@ -2,8 +2,6 @@ package com.cladcobra.tunedraft;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -11,7 +9,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Space;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,8 +24,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.cladcobra.tunedraft.chart.Hot100Chart;
 import com.cladcobra.tunedraft.database.Song;
 import com.cladcobra.tunedraft.database.SongDatabase;
-import com.cladcobra.tunedraft.database.listener.GetAllSongsListener;
-import com.cladcobra.tunedraft.database.listener.IsSongExistsListener;
 import com.google.gson.Gson;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,10 +33,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Hot100Activity extends AppCompatActivity {
@@ -95,7 +87,7 @@ public class Hot100Activity extends AppCompatActivity {
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
 
         // set element variables
-        tunesRemainingText = findViewById(R.id.draftsRemainingText);
+        tunesRemainingText = findViewById(R.id.inventoryText);
         progressBar = findViewById(R.id.progressBar);
 
         updateTunesRemaining(); // updates tunes remaining text
@@ -165,19 +157,20 @@ public class Hot100Activity extends AppCompatActivity {
 
     private void createSongButtons(Hot100Chart chart) {
 
-        LinearLayout songListLayout = findViewById(R.id.songLayout);
+        LinearLayout songListLayout = findViewById(R.id.songListLayout);
         int rank = 1;
 
         for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
 
             Song song = new Song(chartData.getSongName(), chartData.getArtist());
 
+            // TODO: give layouts more descriptive names
             LinearLayout innerLayout = getInnerLayout(chartData); // inner linear vertical layout
             ConstraintLayout outerLayout = getOuterLayout(innerLayout, song, rank); // outer linear horizontal layout
 
             songListLayout.addView(outerLayout); // add outer layout to song list layout
 
-            // add space between each song element
+            // add space between each song info element
             Space space = new Space(this);
             LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -195,7 +188,7 @@ public class Hot100Activity extends AppCompatActivity {
     private ConstraintLayout getOuterLayout(LinearLayout innerLayout, Song song, int rank) {
 
         ConstraintLayout outerLayout = new ConstraintLayout(this);
-        outerLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.song_info_bg));
+        outerLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_song_info_bg));
 
         // hot 100 rank text
         TextView hot100Rank = new TextView(this);
@@ -249,7 +242,7 @@ public class Hot100Activity extends AppCompatActivity {
             );
 
         // check if song already exists in database and disable button if it does
-        isSongExistsInBackground(song, songExists -> {
+        songDatabase.doesSongExist(song, songExists -> {
 
             if (songExists) button.setEnabled(false);
 
@@ -267,7 +260,7 @@ public class Hot100Activity extends AppCompatActivity {
                             (key, value) -> key.setEnabled(false)
                     );
 
-                addSongInBackground(song); // add song to database
+                songDatabase.addSong(song); // add song to database
                 button.setEnabled(false); // disable button after drafting tune to prevent multiple drafts
 
                 sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), tunesRemaining.get() - 1).apply();
@@ -287,30 +280,30 @@ public class Hot100Activity extends AppCompatActivity {
         innerLayout.setOrientation(LinearLayout.VERTICAL);
 
         // song name text
-        TextView songName = new TextView(this);
+        TextView songNameText = new TextView(this);
         String song = chartData.getSongName();
 
         if (song.length() > MAX_SONG_CHARS)
             song = song.substring(0, MAX_SONG_CHARS) + "...";
 
-        songName.setText(song);
-        songName.setPadding(48, 0, 0, 0);
-        songName.setTextSize(20);
+        songNameText.setText(song);
+        songNameText.setPadding(48, 0, 0, 0);
+        songNameText.setTextSize(20);
 
         // artist name text
-        TextView artistName = new TextView(this);
+        TextView artistNameText = new TextView(this);
         String artist = chartData.getArtist().replace("Featuring", "ft.");
 
         if (artist.length() > MAX_ARTIST_CHARS)
             artist = artist.substring(0, MAX_ARTIST_CHARS) + "...";
 
-        artistName.setText(artist);
+        artistNameText.setText(artist);
         // TODO: cut off artist name if too long
-        artistName.setPadding(48, 0, 0, 0);
+        artistNameText.setPadding(48, 0, 0, 0);
 
         // add song and artist to layout
-        innerLayout.addView(songName);
-        innerLayout.addView(artistName);
+        innerLayout.addView(songNameText);
+        innerLayout.addView(artistNameText);
         return innerLayout;
 
     }
@@ -319,48 +312,7 @@ public class Hot100Activity extends AppCompatActivity {
     private void updateTunesRemaining() {
 
         int tunesRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
-        tunesRemainingText.setText(String.format(getString(R.string.drafts_remaining) + " %d", tunesRemaining));
+        tunesRemainingText.setText(String.format(getString(R.string.drafts_remaining_text) + " %d", tunesRemaining));
 
     }
-
-    /* DATABASE UTILS */
-    private void addSongInBackground(Song song) {
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-
-        executorService.execute(() -> {
-
-            songDatabase.getSongDAO().addSong(song);
-            handler.post(() -> Toast.makeText(this, "Song added to database", Toast.LENGTH_SHORT).show());
-
-        });
-    }
-
-    private void getSongsInBackground(GetAllSongsListener listener) {
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-
-        executorService.execute(() -> {
-
-            List<Song> songs = songDatabase.getSongDAO().getAllSongs();
-            handler.post(() -> listener.onGetAllSongs(songs));
-
-        });
-    }
-
-    private void isSongExistsInBackground(Song song, IsSongExistsListener listener) {
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-
-        executorService.execute(() -> {
-
-            boolean songExists = songDatabase.getSongDAO().isSongExists(song.getName(), song.getArtist());
-            handler.post(() -> listener.onIsSongExists(songExists));
-
-        });
-    }
-
 }

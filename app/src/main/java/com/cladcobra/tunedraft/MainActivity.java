@@ -73,9 +73,16 @@ public class MainActivity extends AppCompatActivity {
         Button addDraftsButton = findViewById(R.id.addDraftsButton);
         addDraftsButton.setOnClickListener(v -> AddTuneDraft());
 
-        Button chartButton = findViewById(R.id.billboardHot100);
+        Button chartButton = findViewById(R.id.billboardHot100Button);
         chartButton.setOnClickListener(v -> LoadChart());
 
+        Button inventoryButton = findViewById(R.id.inventoryButton);
+        inventoryButton.setOnClickListener(v -> {
+
+            Intent intent = new Intent(this, InventoryActivity.class);
+            startActivity(intent);
+
+        });
     }
 
     private void AddTuneDraft() {
