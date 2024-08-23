@@ -41,9 +41,9 @@ public class Hot100Activity extends AppCompatActivity {
     // data storage
     private SongDatabase songDatabase;
     private SharedPreferences sharedPrefs;
+    private HashMap<Button, Song> draftButtons;
 
     // UI elements
-    private HashMap<Button, Song> draftButtons;
     private TextView draftsRemainingText;
     private ProgressBar progressBar;
 
@@ -67,16 +67,12 @@ public class Hot100Activity extends AppCompatActivity {
 
             @Override
             public void onCreate(@NotNull SupportSQLiteDatabase db) {
-
                 super.onCreate(db);
-
             }
 
             @Override
             public void onOpen(@NotNull SupportSQLiteDatabase db) {
-
                 super.onOpen(db);
-
             }
         };
 
@@ -194,7 +190,7 @@ public class Hot100Activity extends AppCompatActivity {
     private ConstraintLayout getSongElementLayout(LinearLayout songInfoLayout, Song song, int rank) {
 
         ConstraintLayout songElementLayout = new ConstraintLayout(this);
-        songElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_song_info_bg));
+        songElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_song_element_bg));
 
         // hot 100 rank text
         TextView hot100Rank = new TextView(this);
@@ -211,18 +207,18 @@ public class Hot100Activity extends AppCompatActivity {
         innerLayoutParams.startToEnd = hot100Rank.getId();
         songInfoLayout.setLayoutParams(innerLayoutParams);
 
-        Button button = getDraftButton(song); // button to draft tune
-        draftButtons.put(button, song); // add button & its song to hashmap of draft buttons
+        Button draftButton = createDraftButton(song); // button to draft tune
+        draftButtons.put(draftButton, song); // add button & its song to hashmap of draft buttons
 
         songElementLayout.addView(hot100Rank);
         songElementLayout.addView(songInfoLayout); // add song info layout to song element layout
-        songElementLayout.addView(button);
+        songElementLayout.addView(draftButton);
 
         return songElementLayout;
 
     }
 
-    private Button getDraftButton(Song song) {
+    private Button createDraftButton(Song song) {
 
         // TODO: find more efficient way to store drafts remaining?
 

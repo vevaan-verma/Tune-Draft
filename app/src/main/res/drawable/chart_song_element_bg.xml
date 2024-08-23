@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/song_info_bg"/>
+    <solid android:color="@color/chart_song_element_bg"/>
     <corners android:radius="20dp"/>
     <padding android:left="0dp" android:top="16dp" android:right="0dp" android:bottom="16dp" />
 </shape>

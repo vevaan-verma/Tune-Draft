@@ -18,7 +18,7 @@ public interface SongDAO {
     void updateSong(Song song);
 
     @Delete
-    void deleteSong(Song song);
+    void removeSong(Song song);
 
     @Query("select * from song")
     List<Song> getAllSongs();

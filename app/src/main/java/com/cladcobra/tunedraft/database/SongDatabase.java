@@ -25,6 +25,13 @@ public abstract class SongDatabase extends RoomDatabase {
 
     }
 
+    public void removeSong(Song song) {
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(() -> getSongDAO().removeSong(song));
+
+    }
+
     public void getAllSongs(GetAllSongsListener listener) {
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();

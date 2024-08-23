@@ -44,16 +44,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCreate(@NotNull SupportSQLiteDatabase db) {
-
                 super.onCreate(db);
-
             }
 
             @Override
             public void onOpen(@NotNull SupportSQLiteDatabase db) {
-
                 super.onOpen(db);
-
             }
         };
 

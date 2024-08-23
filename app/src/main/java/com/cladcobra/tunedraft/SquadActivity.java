@@ -1,6 +1,7 @@
 package com.cladcobra.tunedraft;
 
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Space;
 import android.widget.TextView;
@@ -8,6 +9,7 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,15 +19,20 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.cladcobra.tunedraft.database.Song;
 import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.util.SquadElementLayout;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
 
 public class SquadActivity extends AppCompatActivity {
 
     // data storage
     private SongDatabase songDatabase;
+    private HashMap<Button, SquadElementLayout> releaseButtonElements;
 
     // UI elements
+    private LinearLayout squadLayout;
     private TextView squadText;
 
     @Override
@@ -48,21 +55,19 @@ public class SquadActivity extends AppCompatActivity {
 
             @Override
             public void onCreate(@NotNull SupportSQLiteDatabase db) {
-
                 super.onCreate(db);
-
             }
 
             @Override
             public void onOpen(@NotNull SupportSQLiteDatabase db) {
-
                 super.onOpen(db);
-
             }
         };
         songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
                 .addCallback(callback)
                 .build();
+
+        releaseButtonElements = new HashMap<>();
 
         // set element variables
         squadText = findViewById(R.id.squadText);
@@ -76,15 +81,25 @@ public class SquadActivity extends AppCompatActivity {
 
     private void createSongList() {
 
-        LinearLayout squadLayout = findViewById(R.id.squadLayout);
+        squadLayout = findViewById(R.id.squadLayout);
 
         songDatabase.getAllSongs(songs -> {
 
             for (Song song : songs) {
 
+                // space between each song info element
+                Space space = new Space(this);
+                LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        64 // height of space in dp
+                );
+                space.setLayoutParams(spaceParams);
+
+                ConstraintLayout squadElementLayout = new ConstraintLayout(this);
+                squadElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_song_element_bg));
+
                 LinearLayout songInfoLayout = new LinearLayout(this);
                 songInfoLayout.setOrientation(LinearLayout.VERTICAL);
-                songInfoLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_song_info_bg));
 
                 TextView songNameText = new TextView(this);
                 songNameText.setText(String.format("%s", song.getName()));
@@ -95,21 +110,56 @@ public class SquadActivity extends AppCompatActivity {
                 artistNameText.setText(String.format("%s", song.getArtist()));
                 artistNameText.setPadding(48, 0, 0, 0);
 
+                Button releaseButton = createReleaseButton(song);
+                releaseButtonElements.put(releaseButton, new SquadElementLayout(squadElementLayout, space)); // store layout and space for removal
+
                 songInfoLayout.addView(songNameText);
                 songInfoLayout.addView(artistNameText);
 
-                squadLayout.addView(songInfoLayout);
+                squadElementLayout.addView(songInfoLayout);
+                squadElementLayout.addView(releaseButton);
 
-                // add space between each song info element
-                Space space = new Space(this);
-                LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        64 // height of space in dp
-                );
-                space.setLayoutParams(spaceParams);
+                squadLayout.addView(squadElementLayout);
+
                 squadLayout.addView(space);
 
             }
         });
+    }
+
+    private Button createReleaseButton(Song song) {
+
+        // TODO: find more efficient way to store drafts remaining?
+
+        Button button = new Button(this);
+        button.setText(R.string.release_tune_text);
+        button.setBackground(AppCompatResources.getDrawable(this, R.drawable.release_button_bg));
+
+        // constrain draft button to the right/end
+        ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+        );
+        buttonParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        buttonParams.rightMargin = 48;
+        button.setLayoutParams(buttonParams);
+
+        button.setOnClickListener(v -> {
+
+            songDatabase.removeSong(song); // remove song from database
+
+            SquadElementLayout elementLayout = releaseButtonElements.get(button);
+
+            if (elementLayout != null) {
+
+                // remove squad element layout and space
+                squadLayout.removeView(elementLayout.getLayout());
+                squadLayout.removeView(elementLayout.getSpace());
+
+            }
+        });
+
+        return button;
+
     }
 }
