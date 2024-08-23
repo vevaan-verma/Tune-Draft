@@ -71,10 +71,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button addDraftsButton = findViewById(R.id.addDraftsButton);
-        addDraftsButton.setOnClickListener(v -> AddTuneDraft());
+        addDraftsButton.setOnClickListener(v -> addTuneDraft());
 
         Button chartButton = findViewById(R.id.billboardHot100Button);
-        chartButton.setOnClickListener(v -> LoadChart());
+        chartButton.setOnClickListener(v -> loadChart());
 
         Button inventoryButton = findViewById(R.id.inventoryButton);
         inventoryButton.setOnClickListener(v -> {
@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void AddTuneDraft() {
+    private void addTuneDraft() {
 
         int tunesRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
         sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), tunesRemaining + 1).apply();
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void LoadChart() {
+    private void loadChart() {
 
         Intent intent = new Intent(this, Hot100Activity.class);
         startActivity(intent);

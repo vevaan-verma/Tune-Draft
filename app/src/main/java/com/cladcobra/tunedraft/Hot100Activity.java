@@ -44,7 +44,7 @@ public class Hot100Activity extends AppCompatActivity {
     private SongDatabase songDatabase;
     private SharedPreferences sharedPrefs;
     private HashMap<Button, Song> draftButtons;
-    private TextView tunesRemainingText;
+    private TextView draftsRemainingText;
     private ProgressBar progressBar;
 
     @Override
@@ -87,10 +87,12 @@ public class Hot100Activity extends AppCompatActivity {
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
 
         // set element variables
-        tunesRemainingText = findViewById(R.id.inventoryText);
+        draftsRemainingText = findViewById(R.id.draftsRemainingText);
         progressBar = findViewById(R.id.progressBar);
 
-        updateTunesRemaining(); // updates tunes remaining text
+        draftsRemainingText.setBackground(AppCompatResources.getDrawable(this, R.drawable.drafts_remaining_bg));
+
+        updateDraftsRemaining(); // updates tunes remaining text
         getHot100(); // sets up hot 100 chart data
 
     }
@@ -233,10 +235,10 @@ public class Hot100Activity extends AppCompatActivity {
         buttonParams.rightMargin = 48;
         button.setLayoutParams(buttonParams);
 
-        AtomicInteger tunesRemaining = new AtomicInteger(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
+        AtomicInteger draftsRemaining = new AtomicInteger(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
 
         // disable all buttons if no tunes drafts remain
-        if (tunesRemaining.get() == 0)
+        if (draftsRemaining.get() == 0)
             draftButtons.forEach(
                     (key, value) -> key.setEnabled(false)
             );
@@ -250,12 +252,12 @@ public class Hot100Activity extends AppCompatActivity {
 
         button.setOnClickListener(v -> {
 
-            tunesRemaining.set(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
+            draftsRemaining.set(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
 
-            if (tunesRemaining.get() > 0) {
+            if (draftsRemaining.get() > 0) {
 
                 // disable all buttons if no tunes drafts remain
-                if (tunesRemaining.get() == 1) // this would mean there are no tunes remaining now
+                if (draftsRemaining.get() == 1) // this would mean there are no tunes remaining now
                     draftButtons.forEach(
                             (key, value) -> key.setEnabled(false)
                     );
@@ -263,8 +265,8 @@ public class Hot100Activity extends AppCompatActivity {
                 songDatabase.addSong(song); // add song to database
                 button.setEnabled(false); // disable button after drafting tune to prevent multiple drafts
 
-                sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), tunesRemaining.get() - 1).apply();
-                updateTunesRemaining();
+                sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), draftsRemaining.get() - 1).apply();
+                updateDraftsRemaining();
 
             }
         });
@@ -298,7 +300,6 @@ public class Hot100Activity extends AppCompatActivity {
             artist = artist.substring(0, MAX_ARTIST_CHARS) + "...";
 
         artistNameText.setText(artist);
-        // TODO: cut off artist name if too long
         artistNameText.setPadding(48, 0, 0, 0);
 
         // add song and artist to layout
@@ -309,10 +310,10 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     /* UI UTILS */
-    private void updateTunesRemaining() {
+    private void updateDraftsRemaining() {
 
-        int tunesRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
-        tunesRemainingText.setText(String.format(getString(R.string.drafts_remaining_text) + " %d", tunesRemaining));
+        int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
+        draftsRemainingText.setText(String.format(getString(R.string.drafts_remaining_text) + " %d", draftsRemaining));
 
     }
 }

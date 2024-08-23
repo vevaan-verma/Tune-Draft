@@ -17,21 +17,27 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-            android:text="@string/drafts_remaining_text"
-            android:layout_width="0dp"
+    <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/inventoryText"
-            android:layout_weight="1"
-            android:fontFamily="sans-serif-smallcaps"
-            android:textSize="26sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/scrollView"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:gravity="center" />
+            android:id="@+id/topBar"
+            app:layout_constraintBottom_toTopOf="@+id/scrollView">
+
+        <TextView
+                android:text="@string/drafts_remaining_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/draftsRemainingText"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-smallcaps"
+                android:textSize="26sp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:gravity="center" />
+    </RelativeLayout>
 
     <ScrollView
             android:layout_width="match_parent"
