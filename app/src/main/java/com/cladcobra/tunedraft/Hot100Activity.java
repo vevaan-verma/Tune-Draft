@@ -161,18 +161,17 @@ public class Hot100Activity extends AppCompatActivity {
 
     private void createSongButtons(Hot100Chart chart) {
 
-        LinearLayout songListLayout = findViewById(R.id.songListLayout);
+        LinearLayout chartLayout = findViewById(R.id.chartLayout);
         int rank = 1;
 
         for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
 
-            Song song = new Song(chartData.getSongName(), chartData.getArtist());
+            Song song = new Song(chartData.getSongName(), chartData.getArtistFormatted());
 
-            // TODO: give layouts more descriptive names
-            LinearLayout innerLayout = getInnerLayout(chartData); // inner linear vertical layout
-            ConstraintLayout outerLayout = getOuterLayout(innerLayout, song, rank); // outer linear horizontal layout
+            LinearLayout songInfoLayout = getSongInfoLayout(chartData); // inner song info layout
+            ConstraintLayout songElementLayout = getSongElementLayout(songInfoLayout, song, rank); // outer song element layout
 
-            songListLayout.addView(outerLayout); // add outer layout to song list layout
+            chartLayout.addView(songElementLayout); // add song element layout to song list
 
             // add space between each song info element
             Space space = new Space(this);
@@ -181,7 +180,7 @@ public class Hot100Activity extends AppCompatActivity {
                     64 // height of space in dp
             );
             space.setLayoutParams(spaceParams);
-            songListLayout.addView(space);
+            chartLayout.addView(space);
 
             rank++; // increment rank
 
@@ -192,34 +191,34 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     /* RANK & SONG INFO CONTAINER */
-    private ConstraintLayout getOuterLayout(LinearLayout innerLayout, Song song, int rank) {
+    private ConstraintLayout getSongElementLayout(LinearLayout songInfoLayout, Song song, int rank) {
 
-        ConstraintLayout outerLayout = new ConstraintLayout(this);
-        outerLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_song_info_bg));
+        ConstraintLayout songElementLayout = new ConstraintLayout(this);
+        songElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_song_info_bg));
 
         // hot 100 rank text
         TextView hot100Rank = new TextView(this);
         hot100Rank.setText(String.format("%s", rank));
         hot100Rank.setPadding(48, 0, 0, 0);
-        hot100Rank.setId(View.generateViewId()); // set id for constraint layout
+        hot100Rank.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout
         hot100Rank.setTextSize(30);
 
-        // constrain inner layout to the right of hot 100 rank
+        // constrain song info layout to the right of hot 100 rank
         ConstraintLayout.LayoutParams innerLayoutParams = new ConstraintLayout.LayoutParams(
                 ConstraintLayout.LayoutParams.WRAP_CONTENT,
                 ConstraintLayout.LayoutParams.WRAP_CONTENT
         );
         innerLayoutParams.startToEnd = hot100Rank.getId();
-        innerLayout.setLayoutParams(innerLayoutParams);
+        songInfoLayout.setLayoutParams(innerLayoutParams);
 
         Button button = getDraftButton(song); // button to draft tune
         draftButtons.put(button, song); // add button & its song to hashmap of draft buttons
 
-        outerLayout.addView(hot100Rank);
-        outerLayout.addView(innerLayout); // add inner layout to outer layout
-        outerLayout.addView(button);
+        songElementLayout.addView(hot100Rank);
+        songElementLayout.addView(songInfoLayout); // add song info layout to song element layout
+        songElementLayout.addView(button);
 
-        return outerLayout;
+        return songElementLayout;
 
     }
 
@@ -262,15 +261,16 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     /* SONG INFO */
-    private LinearLayout getInnerLayout(Hot100Chart.Hot100ChartData chartData) {
+    private LinearLayout getSongInfoLayout(Hot100Chart.Hot100ChartData chartData) {
 
-        LinearLayout innerLayout = new LinearLayout(this);
-        innerLayout.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout songInfoLayout = new LinearLayout(this);
+        songInfoLayout.setOrientation(LinearLayout.VERTICAL);
 
         // song name text
         TextView songNameText = new TextView(this);
         String song = chartData.getSongName();
 
+        // clamp song name to max length
         int maxSongChars = getResources().getInteger(R.integer.max_song_chars);
 
         if (song.length() > maxSongChars)
@@ -282,8 +282,9 @@ public class Hot100Activity extends AppCompatActivity {
 
         // artist name text
         TextView artistNameText = new TextView(this);
-        String artist = chartData.getArtist().replace("Featuring", "ft.");
+        String artist = chartData.getArtistFormatted();
 
+        // clamp artist name to max length
         int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
 
         if (artist.length() > maxArtistChars)
@@ -293,9 +294,9 @@ public class Hot100Activity extends AppCompatActivity {
         artistNameText.setPadding(48, 0, 0, 0);
 
         // add song and artist to layout
-        innerLayout.addView(songNameText);
-        innerLayout.addView(artistNameText);
-        return innerLayout;
+        songInfoLayout.addView(songNameText);
+        songInfoLayout.addView(artistNameText);
+        return songInfoLayout;
 
     }
 
@@ -304,7 +305,7 @@ public class Hot100Activity extends AppCompatActivity {
 
         int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
 
-        // disable all buttons if no tunes drafts remain or squad songs are full
+        // disable all buttons if no tunes drafts remain or squad is full
         if (draftsRemaining == 0 || SessionData.getSquadSongs() >= getResources().getInteger(R.integer.max_squad_size))
             draftButtons.forEach(
                     (key, value) -> key.setEnabled(false)
@@ -328,4 +329,5 @@ public class Hot100Activity extends AppCompatActivity {
         draftsRemainingText.setText(String.format(getString(R.string.drafts_remaining_text) + " %d", draftsRemaining));
 
     }
+
 }

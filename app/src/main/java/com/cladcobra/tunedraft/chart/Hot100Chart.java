@@ -11,27 +11,19 @@ public class Hot100Chart {
 
     // getters and setters
     public String getDate() {
-
         return date;
-
     }
 
     public void setDate(String date) {
-
         this.date = date;
-
     }
 
     public ArrayList<Hot100ChartData> getData() {
-
         return data;
-
     }
 
     public void setData(ArrayList<Hot100ChartData> data) {
-
         this.data = data;
-
     }
 
     public static class Hot100ChartData {
@@ -53,75 +45,55 @@ public class Hot100Chart {
 
         // getters and setters
         public String getSongName() {
-
             return song;
-
         }
 
         public void setSongName(String songName) {
-
             this.song = songName;
-
         }
 
         public String getArtist() {
-
             return artist;
+        }
 
+        public String getArtistFormatted() {
+            return artist.replace("Featuring", "ft.");
         }
 
         public void setArtist(String artist) {
-
             this.artist = artist;
-
         }
 
         public int getThisWeek() {
-
             return thisWeek;
-
         }
 
         public void setThisWeek(int thisWeek) {
-
             this.thisWeek = thisWeek;
-
         }
 
         public Integer getLastWeek() {
-
             return lastWeek;
-
         }
 
         public void setLastWeek(Integer lastWeek) {
-
             this.lastWeek = lastWeek;
-
         }
 
         public int getPeakPosition() {
-
             return peakPosition;
-
         }
 
         public void setPeakPosition(int peakPosition) {
-
             this.peakPosition = peakPosition;
-
         }
 
         public int getWeeksOnChart() {
-
             return weeksOnChart;
-
         }
 
         public void setWeeksOnChart(int weeksOnChart) {
-
             this.weeksOnChart = weeksOnChart;
-
         }
     }
 }
