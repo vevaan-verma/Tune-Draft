@@ -2,7 +2,6 @@ package com.cladcobra.tunedraft.database;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -50,6 +49,5 @@ public abstract class SongDatabase extends RoomDatabase {
             handler.post(() -> listener.onDoesSongExist(exists));
 
         });
-
     }
 }

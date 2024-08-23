@@ -16,6 +16,7 @@ import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.res.SessionData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,16 +60,12 @@ public class MainActivity extends AppCompatActivity {
         SongDatabase songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
                 .addCallback(callback)
                 .build();
+        songDatabase.getAllSongs(songs -> SessionData.setSquadSongs(songs.size())); // initialize team songs count
 
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
 
         Button clearDataButton = findViewById(R.id.clearDataButton);
-        clearDataButton.setOnClickListener(v -> {
-
-            sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), 0).apply();
-            this.deleteDatabase("song-database");
-
-        });
+        clearDataButton.setOnClickListener(v -> clearData());
 
         Button addDraftsButton = findViewById(R.id.addDraftsButton);
         addDraftsButton.setOnClickListener(v -> addTuneDraft());
@@ -79,17 +76,26 @@ public class MainActivity extends AppCompatActivity {
         Button inventoryButton = findViewById(R.id.inventoryButton);
         inventoryButton.setOnClickListener(v -> {
 
-            Intent intent = new Intent(this, InventoryActivity.class);
+            Intent intent = new Intent(this, SquadActivity.class);
             startActivity(intent);
 
         });
+
+    }
+
+    private void clearData() {
+
+        sharedPrefs.edit().clear().apply();
+        this.deleteDatabase("song-database");
+        SessionData.clearData();
+
     }
 
     private void addTuneDraft() {
 
         int tunesRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
         sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), tunesRemaining + 1).apply();
-        Log.d("debug-info", sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0) + "");
+        Log.d("debug-info", "Drafts Remaining: " + sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
 
     }
 
@@ -99,4 +105,5 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
 
     }
+
 }

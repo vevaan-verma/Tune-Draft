@@ -20,16 +20,20 @@ import com.cladcobra.tunedraft.database.SongDatabase;
 
 import org.jetbrains.annotations.NotNull;
 
-public class InventoryActivity extends AppCompatActivity {
+public class SquadActivity extends AppCompatActivity {
 
+    // data storage
     private SongDatabase songDatabase;
+
+    // UI elements
+    private TextView squadText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_inventory);
+        setContentView(R.layout.activity_squad);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
 
@@ -60,13 +64,19 @@ public class InventoryActivity extends AppCompatActivity {
                 .addCallback(callback)
                 .build();
 
+        // set element variables
+        squadText = findViewById(R.id.squadText);
+
+        // set element backgrounds
+        squadText.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_text_bg));
+
         createSongList();
 
     }
 
     private void createSongList() {
 
-        LinearLayout inventoryLayout = findViewById(R.id.inventoryLayout);
+        LinearLayout squadLayout = findViewById(R.id.squadLayout);
 
         songDatabase.getAllSongs(songs -> {
 
@@ -74,7 +84,7 @@ public class InventoryActivity extends AppCompatActivity {
 
                 LinearLayout songInfoLayout = new LinearLayout(this);
                 songInfoLayout.setOrientation(LinearLayout.VERTICAL);
-                songInfoLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.inventory_song_info_bg));
+                songInfoLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_song_info_bg));
 
                 TextView songNameText = new TextView(this);
                 songNameText.setText(String.format("%s", song.getName()));
@@ -88,7 +98,7 @@ public class InventoryActivity extends AppCompatActivity {
                 songInfoLayout.addView(songNameText);
                 songInfoLayout.addView(artistNameText);
 
-                inventoryLayout.addView(songInfoLayout);
+                squadLayout.addView(songInfoLayout);
 
                 // add space between each song info element
                 Space space = new Space(this);
@@ -97,7 +107,7 @@ public class InventoryActivity extends AppCompatActivity {
                         64 // height of space in dp
                 );
                 space.setLayoutParams(spaceParams);
-                inventoryLayout.addView(space);
+                squadLayout.addView(space);
 
             }
         });

@@ -24,6 +24,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.cladcobra.tunedraft.chart.Hot100Chart;
 import com.cladcobra.tunedraft.database.Song;
 import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.res.SessionData;
 import com.google.gson.Gson;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,15 +35,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Hot100Activity extends AppCompatActivity {
 
-    private static final int MAX_SONG_CHARS = 25;
-    private static final int MAX_ARTIST_CHARS = 20;
-
+    // data storage
     private SongDatabase songDatabase;
     private SharedPreferences sharedPrefs;
+
+    // UI elements
     private HashMap<Button, Song> draftButtons;
     private TextView draftsRemainingText;
     private ProgressBar progressBar;
@@ -79,6 +79,7 @@ public class Hot100Activity extends AppCompatActivity {
 
             }
         };
+
         songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
                 .addCallback(callback)
                 .build();
@@ -90,14 +91,15 @@ public class Hot100Activity extends AppCompatActivity {
         draftsRemainingText = findViewById(R.id.draftsRemainingText);
         progressBar = findViewById(R.id.progressBar);
 
-        draftsRemainingText.setBackground(AppCompatResources.getDrawable(this, R.drawable.drafts_remaining_bg));
+        // set element backgrounds
+        draftsRemainingText.setBackground(AppCompatResources.getDrawable(this, R.drawable.drafts_remaining_text_bg));
 
-        updateDraftsRemaining(); // updates tunes remaining text
-        getHot100(); // sets up hot 100 chart data
+        updateDraftsRemaining(); // update drafts remaining text
+        createHot100Chart(); // create hot 100 chart
 
     }
 
-    private void getHot100() {
+    private void createHot100Chart() {
 
         Gson gson = new Gson();
 
@@ -184,6 +186,9 @@ public class Hot100Activity extends AppCompatActivity {
             rank++; // increment rank
 
         }
+
+        updateDraftButtonStates(); // update draft button states at the very end
+
     }
 
     /* RANK & SONG INFO CONTAINER */
@@ -220,7 +225,7 @@ public class Hot100Activity extends AppCompatActivity {
 
     private Button getDraftButton(Song song) {
 
-        // TODO: find more efficient way to store tunes remaining?
+        // TODO: find more efficient way to store drafts remaining?
 
         Button button = new Button(this);
         button.setText(R.string.draft_tune_text);
@@ -235,38 +240,19 @@ public class Hot100Activity extends AppCompatActivity {
         buttonParams.rightMargin = 48;
         button.setLayoutParams(buttonParams);
 
-        AtomicInteger draftsRemaining = new AtomicInteger(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
-
-        // disable all buttons if no tunes drafts remain
-        if (draftsRemaining.get() == 0)
-            draftButtons.forEach(
-                    (key, value) -> key.setEnabled(false)
-            );
-
-        // check if song already exists in database and disable button if it does
-        songDatabase.doesSongExist(song, songExists -> {
-
-            if (songExists) button.setEnabled(false);
-
-        });
-
         button.setOnClickListener(v -> {
 
-            draftsRemaining.set(sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
+            int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
 
-            if (draftsRemaining.get() > 0) {
-
-                // disable all buttons if no tunes drafts remain
-                if (draftsRemaining.get() == 1) // this would mean there are no tunes remaining now
-                    draftButtons.forEach(
-                            (key, value) -> key.setEnabled(false)
-                    );
+            if (draftsRemaining > 0) { // make sure there are drafts remaining
 
                 songDatabase.addSong(song); // add song to database
-                button.setEnabled(false); // disable button after drafting tune to prevent multiple drafts
 
-                sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), draftsRemaining.get() - 1).apply();
-                updateDraftsRemaining();
+                sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), draftsRemaining - 1).apply();
+                SessionData.incrementSquadSongs(); // increment squad songs
+
+                updateDraftButtonStates(); // update draft button states
+                updateDraftsRemaining(); // update drafts remaining text
 
             }
         });
@@ -285,8 +271,10 @@ public class Hot100Activity extends AppCompatActivity {
         TextView songNameText = new TextView(this);
         String song = chartData.getSongName();
 
-        if (song.length() > MAX_SONG_CHARS)
-            song = song.substring(0, MAX_SONG_CHARS) + "...";
+        int maxSongChars = getResources().getInteger(R.integer.max_song_chars);
+
+        if (song.length() > maxSongChars)
+            song = song.substring(0, maxSongChars) + "...";
 
         songNameText.setText(song);
         songNameText.setPadding(48, 0, 0, 0);
@@ -296,8 +284,10 @@ public class Hot100Activity extends AppCompatActivity {
         TextView artistNameText = new TextView(this);
         String artist = chartData.getArtist().replace("Featuring", "ft.");
 
-        if (artist.length() > MAX_ARTIST_CHARS)
-            artist = artist.substring(0, MAX_ARTIST_CHARS) + "...";
+        int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
+
+        if (artist.length() > maxArtistChars)
+            artist = artist.substring(0, maxArtistChars) + "...";
 
         artistNameText.setText(artist);
         artistNameText.setPadding(48, 0, 0, 0);
@@ -310,6 +300,28 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     /* UI UTILS */
+    private void updateDraftButtonStates() {
+
+        int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
+
+        // disable all buttons if no tunes drafts remain or squad songs are full
+        if (draftsRemaining == 0 || SessionData.getSquadSongs() >= getResources().getInteger(R.integer.max_squad_size))
+            draftButtons.forEach(
+                    (key, value) -> key.setEnabled(false)
+            );
+
+        // check if song already exists in database and disable button if it does
+        draftButtons.forEach((button, song) -> {
+
+            songDatabase.doesSongExist(song, songExists -> {
+
+                if (songExists) button.setEnabled(false);
+
+            });
+        });
+
+    }
+
     private void updateDraftsRemaining() {
 
         int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);

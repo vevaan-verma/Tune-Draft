@@ -16,7 +16,7 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             tools:targetApi="31">
         <activity
-                android:name=".InventoryActivity"
+                android:name=".SquadActivity"
                 android:exported="false" />
         <activity
                 android:name=".Hot100Activity"
