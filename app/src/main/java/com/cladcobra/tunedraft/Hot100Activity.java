@@ -154,16 +154,18 @@ public class Hot100Activity extends AppCompatActivity {
 
     private void createTuneList(Hot100Chart chart) {
 
-        LinearLayout chartLayout = findViewById(R.id.chartLayout);
+        LinearLayout tuneList = findViewById(R.id.tuneList);
         int rank = 1;
 
         for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
 
-            // creation order: rank text -> draft button -> tune info layout -> tune element layout -> tune element layout
+            // creation order: rank text -> draft button -> tune info layout -> tune element layout -> space
+            // layout order: rank text -> tune info layout -> draft button
+            // CONVENTION: create the most nested elements first | create the elements on the side first, then create the middle element and constrain it to the side elements
 
             Tune tune = new Tune(chartData.getTuneName(), chartData.getArtistFormatted(), rank);
 
-            // region HOT 100 RANK TEXT
+            // region RANK TEXT
             TextView rankText = new TextView(this);
             rankText.setText(String.format("#%s", rank));
             rankText.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
@@ -171,16 +173,18 @@ public class Hot100Activity extends AppCompatActivity {
             rankText.setTextSize(30);
             rankText.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
 
-            // constrain rank text to the top, bottom, and left of the parent
+            // region RANK TEXT CONSTRAINTS
+            // constrain rank text to: top, bottom, start of parent
             ConstraintLayout.LayoutParams rankParams = new ConstraintLayout.LayoutParams(
                     ConstraintLayout.LayoutParams.WRAP_CONTENT,
                     ConstraintLayout.LayoutParams.WRAP_CONTENT
             );
             rankParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
             rankParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
-            rankParams.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
+            rankParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
             rankParams.leftMargin = 48;
             rankText.setLayoutParams(rankParams);
+            // endregion
             // endregion
 
             // region DRAFT BUTTON
@@ -189,7 +193,7 @@ public class Hot100Activity extends AppCompatActivity {
             draftButton.setBackground(AppCompatResources.getDrawable(this, R.drawable.draft_button_bg));
             draftButton.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
 
-            // constrain draft button to the top, bottom, and right of the parent
+            // constrain draft button to: top, bottom, end of parent
             ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
                     ConstraintLayout.LayoutParams.WRAP_CONTENT,
                     ConstraintLayout.LayoutParams.WRAP_CONTENT
@@ -216,25 +220,15 @@ public class Hot100Activity extends AppCompatActivity {
 
                 }
             });
-
-            draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
             // endregion
 
             // region TUNE INFO LAYOUT (TUNE NAME & ARTIST NAME)
             LinearLayout tuneInfoLayout = new LinearLayout(this);
             tuneInfoLayout.setOrientation(LinearLayout.VERTICAL);
 
-            // TODO: deal with tune #100 character limit
-
             // region TUNE NAME TEXT
             TextView tuneNameText = new TextView(this);
             String tuneName = chartData.getTuneName();
-
-//            // clamp tune name to max length
-//            int maxTuneChars = getResources().getInteger(R.integer.max_tune_chars);
-//
-//            if (tuneName.length() > maxTuneChars)
-//                tuneName = tuneName.substring(0, maxTuneChars) + "...";
 
             tuneNameText.setText(tuneName);
             tuneNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
@@ -247,12 +241,6 @@ public class Hot100Activity extends AppCompatActivity {
             TextView artistNameText = new TextView(this);
             String artistName = chartData.getArtistFormatted();
 
-//            // clamp artist name to max length
-//            int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
-//
-//            if (artistName.length() > maxArtistChars)
-//                artistName = artistName.substring(0, maxArtistChars) + "...";
-
             artistNameText.setText(artistName);
             artistNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
             artistNameText.setTextSize(16);
@@ -264,8 +252,8 @@ public class Hot100Activity extends AppCompatActivity {
             tuneInfoLayout.addView(tuneNameText);
             tuneInfoLayout.addView(artistNameText);
 
-            // region LAYOUT CONSTRAINTS
-            // constrain tune info layout to the top & bottom of the parent, and to the right of hot 100 rank and left of draft button
+            // region TUNE INFO LAYOUT CONSTRAINTS
+            // constrain tune info layout to: top, bottom of parent | end of hot 100 rank | start of draft button
             ConstraintLayout.LayoutParams tuneInfoParams = new ConstraintLayout.LayoutParams(
                     ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
                     ConstraintLayout.LayoutParams.WRAP_CONTENT
@@ -289,7 +277,7 @@ public class Hot100Activity extends AppCompatActivity {
             tuneElementLayout.addView(tuneInfoLayout);
             tuneElementLayout.addView(draftButton);
 
-            chartLayout.addView(tuneElementLayout); // add tune element layout to tune list
+            tuneList.addView(tuneElementLayout); // add tune element layout to tune list
             // endregion
 
             // region SPACE
@@ -299,9 +287,11 @@ public class Hot100Activity extends AppCompatActivity {
                     64 // height of space in dp
             );
             space.setLayoutParams(spaceParams);
-            chartLayout.addView(space);
+
+            tuneList.addView(space); // add space to tune list
             // endregion
 
+            draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
             rank++; // increment rank
 
         }
@@ -311,8 +301,9 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     // TODO: find more efficient way to store drafts remaining?
+    // TODO: update disabled button visuals
 
-    /* UI UTILS */
+    // region UI UTILITIES
     private void updateDraftButtonStates() {
 
         int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
@@ -336,5 +327,6 @@ public class Hot100Activity extends AppCompatActivity {
         draftsRemainingText.setText(String.format(getResources().getString(R.string.drafts_remaining_text) + " %d", draftsRemaining));
 
     }
+    // endregion
 
 }

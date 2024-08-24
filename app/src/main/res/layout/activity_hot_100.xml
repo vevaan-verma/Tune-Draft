@@ -31,7 +31,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/draftsRemainingText"
-                android:layout_weight="1"
                 android:fontFamily="sans-serif-smallcaps"
                 android:textSize="26sp"
                 android:layout_marginStart="16dp"
@@ -56,7 +55,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:id="@+id/chartLayout" />
+                android:id="@+id/tuneList" />
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

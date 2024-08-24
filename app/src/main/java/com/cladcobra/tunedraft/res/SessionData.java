@@ -16,6 +16,10 @@ public class SessionData {
         squadSize++;
     }
 
+    public static void decrementSquadSize() {
+        squadSize--;
+    }
+
     public static void clearData() {
         squadSize = 0;
     }
