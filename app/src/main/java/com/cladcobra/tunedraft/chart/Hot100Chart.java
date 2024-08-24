@@ -44,12 +44,12 @@ public class Hot100Chart {
         private int weeksOnChart;
 
         // getters and setters
-        public String getSongName() {
+        public String getTuneName() {
             return song;
         }
 
-        public void setSongName(String songName) {
-            this.song = songName;
+        public void setTuneName(String tuneName) {
+            this.song = tuneName;
         }
 
         public String getArtist() {

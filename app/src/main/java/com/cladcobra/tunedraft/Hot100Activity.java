@@ -14,6 +14,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -22,8 +23,8 @@ import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.cladcobra.tunedraft.chart.Hot100Chart;
-import com.cladcobra.tunedraft.database.Song;
-import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.database.Tune;
+import com.cladcobra.tunedraft.database.TuneDatabase;
 import com.cladcobra.tunedraft.res.SessionData;
 import com.google.gson.Gson;
 
@@ -39,9 +40,9 @@ import java.util.Scanner;
 public class Hot100Activity extends AppCompatActivity {
 
     // data storage
-    private SongDatabase songDatabase;
+    private TuneDatabase tuneDatabase;
     private SharedPreferences sharedPrefs;
-    private HashMap<Button, Song> draftButtons;
+    private HashMap<Button, Tune> draftButtons;
 
     // UI elements
     private TextView draftsRemainingText;
@@ -74,14 +75,15 @@ public class Hot100Activity extends AppCompatActivity {
             public void onOpen(@NotNull SupportSQLiteDatabase db) {
                 super.onOpen(db);
             }
+
         };
 
-        songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
+        tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
 
         draftButtons = new HashMap<>();
-        sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
+        sharedPrefs = this.getSharedPreferences(getResources().getString(R.string.preference_file_key), MODE_PRIVATE);
 
         // set element variables
         draftsRemainingText = findViewById(R.id.draftsRemainingText);
@@ -106,7 +108,7 @@ public class Hot100Activity extends AppCompatActivity {
             try {
 
                 StringBuilder result = new StringBuilder();
-                URL url = new URL("https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/recent.json");
+                URL url = new URL(getResources().getString(R.string.data_url));
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
@@ -126,9 +128,7 @@ public class Hot100Activity extends AppCompatActivity {
                     scanner.close();
 
                 } else {
-
                     Log.d("debug-error", "Failed to fetch data. Response Code: " + responseCode);
-
                 }
 
                 Hot100Chart chart = gson.fromJson(result.toString(), Hot100Chart.class);
@@ -136,17 +136,13 @@ public class Hot100Activity extends AppCompatActivity {
                 runOnUiThread(() -> {
 
                     progressBar.post(() -> progressBar.setVisibility(View.GONE));
-                    createSongButtons(chart);
+                    createTuneButtons(chart);
 
                 });
             } catch (MalformedURLException e) {
-
                 Log.d("debug-error", "Malformed URL: " + e.getMessage());
-
             } catch (IOException e) {
-
                 Log.d("debug-error", "IO Exception: " + e.getMessage());
-
             }
         };
 
@@ -155,21 +151,21 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    private void createSongButtons(Hot100Chart chart) {
+    private void createTuneButtons(Hot100Chart chart) {
 
         LinearLayout chartLayout = findViewById(R.id.chartLayout);
         int rank = 1;
 
         for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
 
-            Song song = new Song(chartData.getSongName(), chartData.getArtistFormatted());
+            Tune tune = new Tune(chartData.getTuneName(), chartData.getArtistFormatted(), rank);
 
-            LinearLayout songInfoLayout = getSongInfoLayout(chartData); // inner song info layout
-            ConstraintLayout songElementLayout = getSongElementLayout(songInfoLayout, song, rank); // outer song element layout
+            LinearLayout tuneInfoLayout = getTuneInfoLayout(chartData); // inner tune info layout
+            ConstraintLayout tuneElementLayout = getTuneElementLayout(tuneInfoLayout, tune, rank); // outer tune element layout
 
-            chartLayout.addView(songElementLayout); // add song element layout to song list
+            chartLayout.addView(tuneElementLayout); // add tune element layout to tune list
 
-            // add space between each song info element
+            // add space between each tune info element
             Space space = new Space(this);
             LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -186,39 +182,41 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    /* RANK & SONG INFO CONTAINER */
-    private ConstraintLayout getSongElementLayout(LinearLayout songInfoLayout, Song song, int rank) {
+    /* TUNE ELEMENT | RANK & TUNE INFO CONTAINER */
+    private ConstraintLayout getTuneElementLayout(LinearLayout tuneInfoLayout, Tune tune, int rank) {
 
-        ConstraintLayout songElementLayout = new ConstraintLayout(this);
-        songElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_song_element_bg));
+        ConstraintLayout tuneElementLayout = new ConstraintLayout(this);
+        tuneElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_tune_element_bg));
 
         // hot 100 rank text
         TextView hot100Rank = new TextView(this);
-        hot100Rank.setText(String.format("%s", rank));
+        hot100Rank.setText(String.format("#%s", rank));
+        hot100Rank.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
+        hot100Rank.setTextColor(getResources().getColor(R.color.hot_100_rank_color, null));
         hot100Rank.setPadding(48, 0, 0, 0);
-        hot100Rank.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout
+        hot100Rank.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
         hot100Rank.setTextSize(30);
 
-        // constrain song info layout to the right of hot 100 rank
-        ConstraintLayout.LayoutParams innerLayoutParams = new ConstraintLayout.LayoutParams(
+        // constrain tune info layout to the right of hot 100 rank
+        ConstraintLayout.LayoutParams tuneInfoParams = new ConstraintLayout.LayoutParams(
                 ConstraintLayout.LayoutParams.WRAP_CONTENT,
                 ConstraintLayout.LayoutParams.WRAP_CONTENT
         );
-        innerLayoutParams.startToEnd = hot100Rank.getId();
-        songInfoLayout.setLayoutParams(innerLayoutParams);
+        tuneInfoParams.startToEnd = hot100Rank.getId();
+        tuneInfoLayout.setLayoutParams(tuneInfoParams);
 
-        Button draftButton = createDraftButton(song); // button to draft tune
-        draftButtons.put(draftButton, song); // add button & its song to hashmap of draft buttons
+        Button draftButton = createDraftButton(tune); // button to draft tune
+        draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
 
-        songElementLayout.addView(hot100Rank);
-        songElementLayout.addView(songInfoLayout); // add song info layout to song element layout
-        songElementLayout.addView(draftButton);
+        tuneElementLayout.addView(hot100Rank);
+        tuneElementLayout.addView(tuneInfoLayout); // add tune info layout to tune element layout
+        tuneElementLayout.addView(draftButton);
 
-        return songElementLayout;
+        return tuneElementLayout;
 
     }
 
-    private Button createDraftButton(Song song) {
+    private Button createDraftButton(Tune tune) {
 
         // TODO: find more efficient way to store drafts remaining?
 
@@ -237,14 +235,14 @@ public class Hot100Activity extends AppCompatActivity {
 
         button.setOnClickListener(v -> {
 
-            int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
+            int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
 
             if (draftsRemaining > 0) { // make sure there are drafts remaining
 
-                songDatabase.addSong(song); // add song to database
+                tuneDatabase.addTune(tune); // add tune to database
 
-                sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), draftsRemaining - 1).apply();
-                SessionData.incrementSquadSongs(); // increment squad songs
+                sharedPrefs.edit().putInt(getResources().getString(R.string.drafts_remaining_key), draftsRemaining - 1).apply();
+                SessionData.incrementSquadSize(); // increment squad tunes
 
                 updateDraftButtonStates(); // update draft button states
                 updateDraftsRemaining(); // update drafts remaining text
@@ -256,73 +254,73 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    /* SONG INFO */
-    private LinearLayout getSongInfoLayout(Hot100Chart.Hot100ChartData chartData) {
+    /* TUNE INFO */
+    private LinearLayout getTuneInfoLayout(Hot100Chart.Hot100ChartData chartData) {
 
-        LinearLayout songInfoLayout = new LinearLayout(this);
-        songInfoLayout.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout tuneInfoLayout = new LinearLayout(this);
+        tuneInfoLayout.setOrientation(LinearLayout.VERTICAL);
 
-        // song name text
-        TextView songNameText = new TextView(this);
-        String song = chartData.getSongName();
+        // TODO: deal with tune #100 character limit
 
-        // clamp song name to max length
-        int maxSongChars = getResources().getInteger(R.integer.max_song_chars);
+        // tune name text
+        TextView tuneNameText = new TextView(this);
+        String tuneName = chartData.getTuneName();
 
-        if (song.length() > maxSongChars)
-            song = song.substring(0, maxSongChars) + "...";
+        // clamp tune name to max length
+        int maxTuneChars = getResources().getInteger(R.integer.max_tune_chars);
 
-        songNameText.setText(song);
-        songNameText.setPadding(48, 0, 0, 0);
-        songNameText.setTextSize(20);
+        if (tuneName.length() > maxTuneChars)
+            tuneName = tuneName.substring(0, maxTuneChars) + "...";
+
+        tuneNameText.setText(tuneName);
+        tuneNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
+        tuneNameText.setPadding(48, 0, 0, 0);
+        tuneNameText.setTextSize(24);
 
         // artist name text
         TextView artistNameText = new TextView(this);
-        String artist = chartData.getArtistFormatted();
+        String artistName = chartData.getArtistFormatted();
 
         // clamp artist name to max length
         int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
 
-        if (artist.length() > maxArtistChars)
-            artist = artist.substring(0, maxArtistChars) + "...";
+        if (artistName.length() > maxArtistChars)
+            artistName = artistName.substring(0, maxArtistChars) + "...";
 
-        artistNameText.setText(artist);
+        artistNameText.setText(artistName);
+        artistNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
+        artistNameText.setTextSize(16);
         artistNameText.setPadding(48, 0, 0, 0);
 
-        // add song and artist to layout
-        songInfoLayout.addView(songNameText);
-        songInfoLayout.addView(artistNameText);
-        return songInfoLayout;
+        // add tune and artist to layout
+        tuneInfoLayout.addView(tuneNameText);
+        tuneInfoLayout.addView(artistNameText);
+        return tuneInfoLayout;
 
     }
 
     /* UI UTILS */
     private void updateDraftButtonStates() {
 
-        int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
+        int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
 
         // disable all buttons if no tunes drafts remain or squad is full
-        if (draftsRemaining == 0 || SessionData.getSquadSongs() >= getResources().getInteger(R.integer.max_squad_size))
+        if (draftsRemaining == 0 || SessionData.getSquadSize() >= getResources().getInteger(R.integer.max_squad_size))
             draftButtons.forEach(
                     (key, value) -> key.setEnabled(false)
             );
 
-        // check if song already exists in database and disable button if it does
-        draftButtons.forEach((button, song) -> {
-
-            songDatabase.doesSongExist(song, songExists -> {
-
-                if (songExists) button.setEnabled(false);
-
-            });
-        });
+        // check if tune already exists in database and disable button if it does
+        draftButtons.forEach((button, tune) -> tuneDatabase.doesTuneExist(tune, tuneExists -> {
+            if (tuneExists) button.setEnabled(false);
+        }));
 
     }
 
     private void updateDraftsRemaining() {
 
-        int draftsRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
-        draftsRemainingText.setText(String.format(getString(R.string.drafts_remaining_text) + " %d", draftsRemaining));
+        int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
+        draftsRemainingText.setText(String.format(getResources().getString(R.string.drafts_remaining_text) + " %d", draftsRemaining));
 
     }
 

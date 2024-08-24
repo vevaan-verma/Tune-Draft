@@ -1,6 +1,7 @@
 package com.cladcobra.tunedraft;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Space;
@@ -10,6 +11,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,8 +19,9 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import com.cladcobra.tunedraft.database.Song;
-import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.database.Tune;
+import com.cladcobra.tunedraft.database.TuneDatabase;
+import com.cladcobra.tunedraft.res.SessionData;
 import com.cladcobra.tunedraft.util.SquadElementLayout;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +31,7 @@ import java.util.HashMap;
 public class SquadActivity extends AppCompatActivity {
 
     // data storage
-    private SongDatabase songDatabase;
+    private TuneDatabase tuneDatabase;
     private HashMap<Button, SquadElementLayout> releaseButtonElements;
 
     // UI elements
@@ -62,8 +65,9 @@ public class SquadActivity extends AppCompatActivity {
             public void onOpen(@NotNull SupportSQLiteDatabase db) {
                 super.onOpen(db);
             }
+
         };
-        songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
+        tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
 
@@ -71,23 +75,24 @@ public class SquadActivity extends AppCompatActivity {
 
         // set element variables
         squadText = findViewById(R.id.squadText);
+        squadText.setText(String.format("%s (%s/%s)", getResources().getString(R.string.squad_text), SessionData.getSquadSize(), getResources().getInteger(R.integer.max_squad_size)));
 
         // set element backgrounds
         squadText.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_text_bg));
 
-        createSongList();
+        createTuneList();
 
     }
 
-    private void createSongList() {
+    private void createTuneList() {
 
         squadLayout = findViewById(R.id.squadLayout);
 
-        songDatabase.getAllSongs(songs -> {
+        tuneDatabase.getAllTunes(tunes -> {
 
-            for (Song song : songs) {
+            for (Tune tune : tunes) {
 
-                // space between each song info element
+                // space between each tune info element
                 Space space = new Space(this);
                 LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -96,27 +101,62 @@ public class SquadActivity extends AppCompatActivity {
                 space.setLayoutParams(spaceParams);
 
                 ConstraintLayout squadElementLayout = new ConstraintLayout(this);
-                squadElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_song_element_bg));
+                squadElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_tune_element_bg));
 
-                LinearLayout songInfoLayout = new LinearLayout(this);
-                songInfoLayout.setOrientation(LinearLayout.VERTICAL);
+                LinearLayout tuneInfoLayout = new LinearLayout(this);
+                tuneInfoLayout.setOrientation(LinearLayout.VERTICAL);
 
-                TextView songNameText = new TextView(this);
-                songNameText.setText(String.format("%s", song.getName()));
-                songNameText.setPadding(48, 0, 0, 0);
-                songNameText.setTextSize(20);
+                TextView tuneNameText = new TextView(this);
+                String tuneName = tune.getName();
+
+                // clamp tune name to max length
+                int maxTuneChars = getResources().getInteger(R.integer.max_tune_chars);
+
+                if (tuneName.length() > maxTuneChars)
+                    tuneName = tuneName.substring(0, maxTuneChars) + "...";
+
+                tuneNameText.setText(String.format("%s", tuneName));
+                tuneNameText.setPadding(48, 0, 0, 0);
+                tuneNameText.setTextSize(24);
 
                 TextView artistNameText = new TextView(this);
-                artistNameText.setText(String.format("%s", song.getArtist()));
-                artistNameText.setPadding(48, 0, 0, 0);
+                String artistName = tune.getArtist();
 
-                Button releaseButton = createReleaseButton(song);
+                // clamp artist name to max length
+                int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
+
+                if (artistName.length() > maxArtistChars)
+                    artistName = artistName.substring(0, maxArtistChars) + "...";
+
+                artistNameText.setText(String.format("%s", artistName));
+                artistNameText.setPadding(48, 0, 0, 0);
+                artistNameText.setTextSize(16);
+
+                // hot 100 rank text
+                TextView hot100Rank = new TextView(this);
+                hot100Rank.setText(String.format("#%s", tune.getRank()));
+                hot100Rank.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
+                hot100Rank.setTextColor(getResources().getColor(R.color.hot_100_rank_color, null));
+                hot100Rank.setTextSize(30);
+
+                // release button
+                Button releaseButton = createReleaseButton(tune);
                 releaseButtonElements.put(releaseButton, new SquadElementLayout(squadElementLayout, space)); // store layout and space for removal
 
-                songInfoLayout.addView(songNameText);
-                songInfoLayout.addView(artistNameText);
+                // constrain tune info layout to the left of hot 100 rank
+                ConstraintLayout.LayoutParams rankParams = new ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+                rankParams.endToStart = releaseButton.getId();
+                rankParams.rightMargin = 48;
+                hot100Rank.setLayoutParams(rankParams);
 
-                squadElementLayout.addView(songInfoLayout);
+                tuneInfoLayout.addView(tuneNameText);
+                tuneInfoLayout.addView(artistNameText);
+
+                squadElementLayout.addView(tuneInfoLayout);
+                squadElementLayout.addView(hot100Rank);
                 squadElementLayout.addView(releaseButton);
 
                 squadLayout.addView(squadElementLayout);
@@ -127,13 +167,14 @@ public class SquadActivity extends AppCompatActivity {
         });
     }
 
-    private Button createReleaseButton(Song song) {
+    private Button createReleaseButton(Tune tune) {
 
         // TODO: find more efficient way to store drafts remaining?
 
         Button button = new Button(this);
         button.setText(R.string.release_tune_text);
         button.setBackground(AppCompatResources.getDrawable(this, R.drawable.release_button_bg));
+        button.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
 
         // constrain draft button to the right/end
         ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
@@ -146,7 +187,7 @@ public class SquadActivity extends AppCompatActivity {
 
         button.setOnClickListener(v -> {
 
-            songDatabase.removeSong(song); // remove song from database
+            tuneDatabase.removeTune(tune); // remove tune from database
 
             SquadElementLayout elementLayout = releaseButtonElements.get(button);
 

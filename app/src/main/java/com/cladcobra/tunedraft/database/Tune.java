@@ -5,29 +5,33 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "Song")
-public class Song {
+@Entity(tableName = "Tune")
+public class Tune {
 
-    @ColumnInfo(name = "song_id")
+    @ColumnInfo(name = "tune_id")
     @PrimaryKey(autoGenerate = true)
     int id;
 
-    @ColumnInfo(name = "song_name")
+    @ColumnInfo(name = "tune_name")
     private String name;
 
-    @ColumnInfo(name = "song_artist")
+    @ColumnInfo(name = "tune_artist")
     private String artist;
 
+    @ColumnInfo(name = "tune_rank")
+    private int rank;
+
     @Ignore
-    public Song() {
+    public Tune() {
 
     }
 
-    public Song(String name, String artist) {
+    public Tune(String name, String artist, int rank) {
 
         this.id = 0;
         this.name = name;
         this.artist = artist;
+        this.rank = rank;
 
     }
 
@@ -38,4 +42,9 @@ public class Song {
     public String getArtist() {
         return artist;
     }
+
+    public int getRank() {
+        return rank;
+    }
+
 }

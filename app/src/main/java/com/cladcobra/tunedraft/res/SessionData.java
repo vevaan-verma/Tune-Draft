@@ -2,22 +2,22 @@ package com.cladcobra.tunedraft.res;
 
 public class SessionData {
 
-    private static int squadSongs = 0;
+    private static int squadSize = 0;
 
-    public static int getSquadSongs() {
-        return squadSongs;
+    public static int getSquadSize() {
+        return squadSize;
     }
 
-    public static void setSquadSongs(int squadSongs) {
-        SessionData.squadSongs = squadSongs;
+    public static void setSquadSize(int squadSize) {
+        SessionData.squadSize = squadSize;
     }
 
-    public static void incrementSquadSongs() {
-        squadSongs++;
+    public static void incrementSquadSize() {
+        squadSize++;
     }
 
     public static void clearData() {
-        squadSongs = 0;
+        squadSize = 0;
     }
 
 }

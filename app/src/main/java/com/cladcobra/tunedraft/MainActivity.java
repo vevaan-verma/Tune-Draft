@@ -15,7 +15,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import com.cladcobra.tunedraft.database.SongDatabase;
+import com.cladcobra.tunedraft.database.TuneDatabase;
 import com.cladcobra.tunedraft.res.SessionData;
 
 import org.jetbrains.annotations.NotNull;
@@ -51,12 +51,13 @@ public class MainActivity extends AppCompatActivity {
             public void onOpen(@NotNull SupportSQLiteDatabase db) {
                 super.onOpen(db);
             }
+
         };
 
-        SongDatabase songDatabase = Room.databaseBuilder(getApplicationContext(), SongDatabase.class, "song-database")
+        TuneDatabase tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
-        songDatabase.getAllSongs(songs -> SessionData.setSquadSongs(songs.size())); // initialize team songs count
+        tuneDatabase.getAllTunes(tunes -> SessionData.setSquadSize(tunes.size())); // initialize team tunes count
 
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
 
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private void clearData() {
 
         sharedPrefs.edit().clear().apply();
-        this.deleteDatabase("song-database");
+        this.deleteDatabase("tune-database");
         SessionData.clearData();
 
     }
