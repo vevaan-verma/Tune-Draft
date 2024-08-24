@@ -27,10 +27,10 @@
             app:layout_constraintBottom_toTopOf="@+id/scrollView">
 
         <TextView
-                android:text="@string/drafts_remaining_text"
+                android:text="@string/tune_drafts_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/draftsRemainingText"
+                android:id="@+id/tuneDraftsText"
                 android:fontFamily="sans-serif-smallcaps"
                 android:textSize="26sp"
                 android:layout_marginStart="16dp"

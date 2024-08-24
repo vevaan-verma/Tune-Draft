@@ -46,12 +46,13 @@ public class Hot100Activity extends AppCompatActivity {
     private HashMap<Button, Tune> draftButtons;
 
     // UI elements
-    private TextView draftsRemainingText;
+    private TextView tuneDraftsText;
     private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // region BOILERPLATE
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_hot_100);
@@ -63,8 +64,9 @@ public class Hot100Activity extends AppCompatActivity {
             return insets;
 
         });
+        // endregion
 
-        /* DATABASE INITIALIZATION */
+        // region DATA STORAGE INITIALIZATION
         RoomDatabase.Callback callback = new RoomDatabase.Callback() {
 
             @Override
@@ -82,19 +84,28 @@ public class Hot100Activity extends AppCompatActivity {
         tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
+        // endregion
 
         draftButtons = new HashMap<>();
         sharedPrefs = this.getSharedPreferences(getResources().getString(R.string.preference_file_key), MODE_PRIVATE);
 
         // set element variables
-        draftsRemainingText = findViewById(R.id.draftsRemainingText);
+        tuneDraftsText = findViewById(R.id.tuneDraftsText);
         progressBar = findViewById(R.id.progressBar);
 
         // set element backgrounds
-        draftsRemainingText.setBackground(AppCompatResources.getDrawable(this, R.drawable.drafts_remaining_text_bg));
+        tuneDraftsText.setBackground(AppCompatResources.getDrawable(this, R.drawable.tune_drafts_text_bg));
 
-        updateDraftsRemaining(); // update drafts remaining text
+        updateTuneDraftsText(); // update tune drafts text
         createHot100Chart(); // create hot 100 chart
+
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        super.onDestroy();
+        sharedPrefs.edit().putInt(getResources().getString(R.string.tune_drafts_key), SessionData.getTuneDrafts()).apply(); // save tune drafts to shared preferences when activity is destroyed
 
     }
 
@@ -207,17 +218,15 @@ public class Hot100Activity extends AppCompatActivity {
 
             draftButton.setOnClickListener(v -> {
 
-                int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
-
-                if (draftsRemaining > 0) { // make sure there are drafts remaining
+                if (SessionData.getTuneDrafts() > 0) { // make sure there are tune drafts remaining
 
                     tuneDatabase.addTune(tune); // add tune to database
 
-                    sharedPrefs.edit().putInt(getResources().getString(R.string.drafts_remaining_key), draftsRemaining - 1).apply();
+                    SessionData.decrementTuneDrafts(); // decrement tune drafts
                     SessionData.incrementSquadSize(); // increment squad tunes
 
                     updateDraftButtonStates(); // update draft button states
-                    updateDraftsRemaining(); // update drafts remaining text
+                    updateTuneDraftsText(); // update tune drafts text
 
                 }
             });
@@ -306,16 +315,14 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    // TODO: find more efficient way to store drafts remaining?
     // TODO: update disabled button visuals
 
     // region UI UTILITIES
     private void updateDraftButtonStates() {
 
-        int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
-
-        // disable all buttons if no tunes drafts remain or squad is full
-        if (draftsRemaining == 0 || SessionData.getSquadSize() >= getResources().getInteger(R.integer.max_squad_size))
+        Log.d("debug-info", "Tune Drafts: " + SessionData.getTuneDrafts());
+        // disable all buttons if no tune drafts remain or squad is full
+        if (SessionData.getTuneDrafts() == 0 || SessionData.getSquadSize() >= getResources().getInteger(R.integer.max_squad_size))
             draftButtons.forEach(
                     (key, value) -> key.setEnabled(false)
             );
@@ -327,11 +334,8 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    private void updateDraftsRemaining() {
-
-        int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
-        draftsRemainingText.setText(String.format(getResources().getString(R.string.drafts_remaining_text) + " %d", draftsRemaining));
-
+    private void updateTuneDraftsText() {
+        tuneDraftsText.setText(String.format(getResources().getString(R.string.tune_drafts_text) + " %d", SessionData.getTuneDrafts()));
     }
     // endregion
 

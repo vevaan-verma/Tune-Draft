@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // region BOILERPLATE
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
@@ -38,8 +39,9 @@ public class MainActivity extends AppCompatActivity {
             return insets;
 
         });
+        // endregion
 
-        /* DATABASE INITIALIZATION */
+        // region DATA STORAGE INITIALIZATION
         RoomDatabase.Callback callback = new RoomDatabase.Callback() {
 
             @Override
@@ -57,10 +59,15 @@ public class MainActivity extends AppCompatActivity {
         TuneDatabase tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
-        tuneDatabase.getAllTunes(tunes -> SessionData.setSquadSize(tunes.size())); // initialize team tunes count
 
         sharedPrefs = this.getSharedPreferences(getString(R.string.preference_file_key), MODE_PRIVATE);
+        // endregion
 
+        // initialize session data from data storage
+        tuneDatabase.getAllTunes(tunes -> SessionData.setSquadSize(tunes.size())); // initialize squad size from database
+        SessionData.setTuneDrafts(sharedPrefs.getInt(getResources().getString(R.string.tune_drafts_key), 0)); // initialize tune drafts from shared preferences
+
+        // region BUTTONS
         Button clearDataButton = findViewById(R.id.clearDataButton);
         clearDataButton.setOnClickListener(v -> clearData());
 
@@ -77,6 +84,15 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
 
         });
+        // endregion
+
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        super.onDestroy();
+        sharedPrefs.edit().putInt(getResources().getString(R.string.tune_drafts_key), SessionData.getTuneDrafts()).apply(); // save tune drafts to shared preferences when activity is destroyed
 
     }
 
@@ -90,9 +106,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void addTuneDraft() {
 
-        int tunesRemaining = sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0);
-        sharedPrefs.edit().putInt(getString(R.string.drafts_remaining_key), tunesRemaining + 1).apply();
-        Log.d("debug-info", "Drafts Remaining: " + sharedPrefs.getInt(getString(R.string.drafts_remaining_key), 0));
+        SessionData.incrementTuneDrafts();
+        Log.d("debug-info", "Tune Drafts: " + SessionData.getTuneDrafts());
 
     }
 

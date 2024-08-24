@@ -42,6 +42,7 @@ public class SquadActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // region BOILERPLATE
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_squad);
@@ -53,8 +54,9 @@ public class SquadActivity extends AppCompatActivity {
             return insets;
 
         });
+        // endregion
 
-        /* DATABASE INITIALIZATION */
+        // region DATA STORAGE INITIALIZATION
         RoomDatabase.Callback callback = new RoomDatabase.Callback() {
 
             @Override
@@ -68,9 +70,11 @@ public class SquadActivity extends AppCompatActivity {
             }
 
         };
+
         tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
+        // endregion
 
         releaseButtonElements = new HashMap<>();
 
@@ -125,7 +129,7 @@ public class SquadActivity extends AppCompatActivity {
                 releaseButton.setBackground(AppCompatResources.getDrawable(this, R.drawable.release_button_bg));
                 releaseButton.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
 
-                // constrain draft button to: top, bottom, end of parent
+                // constrain release button to: top, bottom, end of parent
                 ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
                         ConstraintLayout.LayoutParams.WRAP_CONTENT,
                         ConstraintLayout.LayoutParams.WRAP_CONTENT
@@ -184,7 +188,7 @@ public class SquadActivity extends AppCompatActivity {
                 tuneInfoLayout.addView(artistNameText);
 
                 // region TUNE INFO LAYOUT CONSTRAINTS
-                // constrain tune info layout to: top, bottom of parent | end of hot 100 rank | start of draft button
+                // constrain tune info layout to: top, bottom of parent | end of hot 100 rank | start of release button
                 ConstraintLayout.LayoutParams tuneInfoParams = new ConstraintLayout.LayoutParams(
                         ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
                         ConstraintLayout.LayoutParams.WRAP_CONTENT
