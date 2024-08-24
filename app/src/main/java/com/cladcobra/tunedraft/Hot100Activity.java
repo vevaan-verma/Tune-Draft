@@ -2,6 +2,7 @@ package com.cladcobra.tunedraft;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -136,7 +137,7 @@ public class Hot100Activity extends AppCompatActivity {
                 runOnUiThread(() -> {
 
                     progressBar.post(() -> progressBar.setVisibility(View.GONE));
-                    createTuneButtons(chart);
+                    createTuneList(chart);
 
                 });
             } catch (MalformedURLException e) {
@@ -151,21 +152,147 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    private void createTuneButtons(Hot100Chart chart) {
+    private void createTuneList(Hot100Chart chart) {
 
         LinearLayout chartLayout = findViewById(R.id.chartLayout);
         int rank = 1;
 
         for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
 
+            // creation order: rank text -> draft button -> tune info layout -> tune element layout -> tune element layout
+
             Tune tune = new Tune(chartData.getTuneName(), chartData.getArtistFormatted(), rank);
 
-            LinearLayout tuneInfoLayout = getTuneInfoLayout(chartData); // inner tune info layout
-            ConstraintLayout tuneElementLayout = getTuneElementLayout(tuneInfoLayout, tune, rank); // outer tune element layout
+            // region HOT 100 RANK TEXT
+            TextView rankText = new TextView(this);
+            rankText.setText(String.format("#%s", rank));
+            rankText.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
+            rankText.setTextColor(getResources().getColor(R.color.hot_100_rank_color, null));
+            rankText.setTextSize(30);
+            rankText.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
+
+            // constrain rank text to the top, bottom, and left of the parent
+            ConstraintLayout.LayoutParams rankParams = new ConstraintLayout.LayoutParams(
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+            );
+            rankParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+            rankParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+            rankParams.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
+            rankParams.leftMargin = 48;
+            rankText.setLayoutParams(rankParams);
+            // endregion
+
+            // region DRAFT BUTTON
+            Button draftButton = new Button(this);
+            draftButton.setText(R.string.draft_tune_text);
+            draftButton.setBackground(AppCompatResources.getDrawable(this, R.drawable.draft_button_bg));
+            draftButton.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
+
+            // constrain draft button to the top, bottom, and right of the parent
+            ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+            );
+            buttonParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+            buttonParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+            buttonParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+            buttonParams.rightMargin = 48;
+            draftButton.setLayoutParams(buttonParams);
+
+            draftButton.setOnClickListener(v -> {
+
+                int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
+
+                if (draftsRemaining > 0) { // make sure there are drafts remaining
+
+                    tuneDatabase.addTune(tune); // add tune to database
+
+                    sharedPrefs.edit().putInt(getResources().getString(R.string.drafts_remaining_key), draftsRemaining - 1).apply();
+                    SessionData.incrementSquadSize(); // increment squad tunes
+
+                    updateDraftButtonStates(); // update draft button states
+                    updateDraftsRemaining(); // update drafts remaining text
+
+                }
+            });
+
+            draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
+            // endregion
+
+            // region TUNE INFO LAYOUT (TUNE NAME & ARTIST NAME)
+            LinearLayout tuneInfoLayout = new LinearLayout(this);
+            tuneInfoLayout.setOrientation(LinearLayout.VERTICAL);
+
+            // TODO: deal with tune #100 character limit
+
+            // region TUNE NAME TEXT
+            TextView tuneNameText = new TextView(this);
+            String tuneName = chartData.getTuneName();
+
+//            // clamp tune name to max length
+//            int maxTuneChars = getResources().getInteger(R.integer.max_tune_chars);
+//
+//            if (tuneName.length() > maxTuneChars)
+//                tuneName = tuneName.substring(0, maxTuneChars) + "...";
+
+            tuneNameText.setText(tuneName);
+            tuneNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
+            tuneNameText.setTextSize(24);
+            tuneNameText.setEllipsize(TextUtils.TruncateAt.END);
+            tuneNameText.setSingleLine();
+            // endregion
+
+            // region ARTIST NAME TEXT
+            TextView artistNameText = new TextView(this);
+            String artistName = chartData.getArtistFormatted();
+
+//            // clamp artist name to max length
+//            int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
+//
+//            if (artistName.length() > maxArtistChars)
+//                artistName = artistName.substring(0, maxArtistChars) + "...";
+
+            artistNameText.setText(artistName);
+            artistNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
+            artistNameText.setTextSize(16);
+            artistNameText.setEllipsize(TextUtils.TruncateAt.END);
+            artistNameText.setSingleLine();
+            // endregion
+
+            // add tune and artist texts to layout
+            tuneInfoLayout.addView(tuneNameText);
+            tuneInfoLayout.addView(artistNameText);
+
+            // region LAYOUT CONSTRAINTS
+            // constrain tune info layout to the top & bottom of the parent, and to the right of hot 100 rank and left of draft button
+            ConstraintLayout.LayoutParams tuneInfoParams = new ConstraintLayout.LayoutParams(
+                    ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+            );
+            tuneInfoParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+            tuneInfoParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+            tuneInfoParams.startToEnd = rankText.getId();
+            tuneInfoParams.endToStart = draftButton.getId();
+            tuneInfoParams.leftMargin = 48;
+            tuneInfoParams.rightMargin = 48;
+            tuneInfoLayout.setLayoutParams(tuneInfoParams);
+            // endregion
+            // endregion
+
+            // region TUNE ELEMENT LAYOUT
+            ConstraintLayout tuneElementLayout = new ConstraintLayout(this);
+            tuneElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_tune_element_bg));
+
+            // add rank text, tune info layout, and draft button to tune element layout
+            tuneElementLayout.addView(rankText);
+            tuneElementLayout.addView(tuneInfoLayout);
+            tuneElementLayout.addView(draftButton);
 
             chartLayout.addView(tuneElementLayout); // add tune element layout to tune list
+            // endregion
 
-            // add space between each tune info element
+            // region SPACE
             Space space = new Space(this);
             LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -173,6 +300,7 @@ public class Hot100Activity extends AppCompatActivity {
             );
             space.setLayoutParams(spaceParams);
             chartLayout.addView(space);
+            // endregion
 
             rank++; // increment rank
 
@@ -182,122 +310,7 @@ public class Hot100Activity extends AppCompatActivity {
 
     }
 
-    /* TUNE ELEMENT | RANK & TUNE INFO CONTAINER */
-    private ConstraintLayout getTuneElementLayout(LinearLayout tuneInfoLayout, Tune tune, int rank) {
-
-        ConstraintLayout tuneElementLayout = new ConstraintLayout(this);
-        tuneElementLayout.setBackground(AppCompatResources.getDrawable(this, R.drawable.chart_tune_element_bg));
-
-        // hot 100 rank text
-        TextView hot100Rank = new TextView(this);
-        hot100Rank.setText(String.format("#%s", rank));
-        hot100Rank.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
-        hot100Rank.setTextColor(getResources().getColor(R.color.hot_100_rank_color, null));
-        hot100Rank.setPadding(48, 0, 0, 0);
-        hot100Rank.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
-        hot100Rank.setTextSize(30);
-
-        // constrain tune info layout to the right of hot 100 rank
-        ConstraintLayout.LayoutParams tuneInfoParams = new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-        );
-        tuneInfoParams.startToEnd = hot100Rank.getId();
-        tuneInfoLayout.setLayoutParams(tuneInfoParams);
-
-        Button draftButton = createDraftButton(tune); // button to draft tune
-        draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
-
-        tuneElementLayout.addView(hot100Rank);
-        tuneElementLayout.addView(tuneInfoLayout); // add tune info layout to tune element layout
-        tuneElementLayout.addView(draftButton);
-
-        return tuneElementLayout;
-
-    }
-
-    private Button createDraftButton(Tune tune) {
-
-        // TODO: find more efficient way to store drafts remaining?
-
-        Button button = new Button(this);
-        button.setText(R.string.draft_tune_text);
-        button.setBackground(AppCompatResources.getDrawable(this, R.drawable.draft_button_bg));
-
-        // constrain draft button to the right/end
-        ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-        );
-        buttonParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
-        buttonParams.rightMargin = 48;
-        button.setLayoutParams(buttonParams);
-
-        button.setOnClickListener(v -> {
-
-            int draftsRemaining = sharedPrefs.getInt(getResources().getString(R.string.drafts_remaining_key), 0);
-
-            if (draftsRemaining > 0) { // make sure there are drafts remaining
-
-                tuneDatabase.addTune(tune); // add tune to database
-
-                sharedPrefs.edit().putInt(getResources().getString(R.string.drafts_remaining_key), draftsRemaining - 1).apply();
-                SessionData.incrementSquadSize(); // increment squad tunes
-
-                updateDraftButtonStates(); // update draft button states
-                updateDraftsRemaining(); // update drafts remaining text
-
-            }
-        });
-
-        return button;
-
-    }
-
-    /* TUNE INFO */
-    private LinearLayout getTuneInfoLayout(Hot100Chart.Hot100ChartData chartData) {
-
-        LinearLayout tuneInfoLayout = new LinearLayout(this);
-        tuneInfoLayout.setOrientation(LinearLayout.VERTICAL);
-
-        // TODO: deal with tune #100 character limit
-
-        // tune name text
-        TextView tuneNameText = new TextView(this);
-        String tuneName = chartData.getTuneName();
-
-        // clamp tune name to max length
-        int maxTuneChars = getResources().getInteger(R.integer.max_tune_chars);
-
-        if (tuneName.length() > maxTuneChars)
-            tuneName = tuneName.substring(0, maxTuneChars) + "...";
-
-        tuneNameText.setText(tuneName);
-        tuneNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
-        tuneNameText.setPadding(48, 0, 0, 0);
-        tuneNameText.setTextSize(24);
-
-        // artist name text
-        TextView artistNameText = new TextView(this);
-        String artistName = chartData.getArtistFormatted();
-
-        // clamp artist name to max length
-        int maxArtistChars = getResources().getInteger(R.integer.max_artist_chars);
-
-        if (artistName.length() > maxArtistChars)
-            artistName = artistName.substring(0, maxArtistChars) + "...";
-
-        artistNameText.setText(artistName);
-        artistNameText.setTypeface(ResourcesCompat.getFont(this, R.font.inconsolata));
-        artistNameText.setTextSize(16);
-        artistNameText.setPadding(48, 0, 0, 0);
-
-        // add tune and artist to layout
-        tuneInfoLayout.addView(tuneNameText);
-        tuneInfoLayout.addView(artistNameText);
-        return tuneInfoLayout;
-
-    }
+    // TODO: find more efficient way to store drafts remaining?
 
     /* UI UTILS */
     private void updateDraftButtonStates() {

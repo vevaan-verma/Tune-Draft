@@ -133,30 +133,42 @@ public class SquadActivity extends AppCompatActivity {
                 artistNameText.setTextSize(16);
 
                 // hot 100 rank text
-                TextView hot100Rank = new TextView(this);
-                hot100Rank.setText(String.format("#%s", tune.getRank()));
-                hot100Rank.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
-                hot100Rank.setTextColor(getResources().getColor(R.color.hot_100_rank_color, null));
-                hot100Rank.setTextSize(30);
+                TextView rankText = new TextView(this);
+                rankText.setText(String.format("#%s", tune.getRank()));
+                rankText.setTypeface(ResourcesCompat.getFont(this, R.font.rem));
+                rankText.setTextColor(getResources().getColor(R.color.hot_100_rank_color, null));
+                rankText.setTextSize(30);
 
                 // release button
                 Button releaseButton = createReleaseButton(tune);
                 releaseButtonElements.put(releaseButton, new SquadElementLayout(squadElementLayout, space)); // store layout and space for removal
+
+                // constrain tune info layout to the top and bottom of the parent and to the right of hot 100 rank
+                ConstraintLayout.LayoutParams tuneInfoParams = new ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+                tuneInfoParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                tuneInfoParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+                tuneInfoParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+                tuneInfoLayout.setLayoutParams(tuneInfoParams);
 
                 // constrain tune info layout to the left of hot 100 rank
                 ConstraintLayout.LayoutParams rankParams = new ConstraintLayout.LayoutParams(
                         ConstraintLayout.LayoutParams.WRAP_CONTENT,
                         ConstraintLayout.LayoutParams.WRAP_CONTENT
                 );
+                rankParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                rankParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
                 rankParams.endToStart = releaseButton.getId();
                 rankParams.rightMargin = 48;
-                hot100Rank.setLayoutParams(rankParams);
+                rankText.setLayoutParams(rankParams);
 
                 tuneInfoLayout.addView(tuneNameText);
                 tuneInfoLayout.addView(artistNameText);
 
                 squadElementLayout.addView(tuneInfoLayout);
-                squadElementLayout.addView(hot100Rank);
+                squadElementLayout.addView(rankText);
                 squadElementLayout.addView(releaseButton);
 
                 squadLayout.addView(squadElementLayout);
@@ -169,18 +181,18 @@ public class SquadActivity extends AppCompatActivity {
 
     private Button createReleaseButton(Tune tune) {
 
-        // TODO: find more efficient way to store drafts remaining?
-
         Button button = new Button(this);
         button.setText(R.string.release_tune_text);
         button.setBackground(AppCompatResources.getDrawable(this, R.drawable.release_button_bg));
         button.setId(View.generateViewId()); // IMPORTANT: set id for constraint layout placement
 
-        // constrain draft button to the right/end
+        // constrain release button to the top and bottom of the parent and to the right/end
         ConstraintLayout.LayoutParams buttonParams = new ConstraintLayout.LayoutParams(
                 ConstraintLayout.LayoutParams.WRAP_CONTENT,
                 ConstraintLayout.LayoutParams.WRAP_CONTENT
         );
+        buttonParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+        buttonParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
         buttonParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
         buttonParams.rightMargin = 48;
         button.setLayoutParams(buttonParams);
