@@ -154,15 +154,16 @@ public class Hot100Activity extends AppCompatActivity {
 
     private void createTuneList(Hot100Chart chart) {
 
-        LinearLayout tuneList = findViewById(R.id.tuneList);
+        LinearLayout chartList = findViewById(R.id.chartList);
         int rank = 1;
 
-        for (Hot100Chart.Hot100ChartData chartData : chart.getData()) {
+        for (int i = 0; i < chart.getData().size(); i++) {
 
             // creation order: rank text -> draft button -> tune info layout -> tune element layout -> space
             // layout order: rank text -> tune info layout -> draft button
             // CONVENTION: create the most nested elements first | create the elements on the side first, then create the middle element and constrain it to the side elements
 
+            Hot100Chart.Hot100ChartData chartData = chart.getData().get(i);
             Tune tune = new Tune(chartData.getTuneName(), chartData.getArtistFormatted(), rank);
 
             // region RANK TEXT
@@ -277,18 +278,23 @@ public class Hot100Activity extends AppCompatActivity {
             tuneElementLayout.addView(tuneInfoLayout);
             tuneElementLayout.addView(draftButton);
 
-            tuneList.addView(tuneElementLayout); // add tune element layout to tune list
+            chartList.addView(tuneElementLayout); // add tune element layout to tune list
             // endregion
 
             // region SPACE
-            Space space = new Space(this);
-            LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    64 // height of space in dp
-            );
-            space.setLayoutParams(spaceParams);
+            // only add space after element if it's not the last element in the chart
+            if (i < chart.getData().size() - 1) {
 
-            tuneList.addView(space); // add space to tune list
+                Space space = new Space(this);
+                LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        64 // height of space in dp
+                );
+                space.setLayoutParams(spaceParams);
+
+                chartList.addView(space); // add space to tune list
+
+            }
             // endregion
 
             draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
