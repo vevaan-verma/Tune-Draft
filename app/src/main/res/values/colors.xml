@@ -6,9 +6,14 @@
     <color name="drafts_remaining_text_bg">#505050</color>
     <color name="chart_tune_element_bg">#505050</color>
     <color name="hot_100_rank_color">#B5A416</color>
-    <color name="draft_button_bg">#4CAF50</color>
+    <color name="draft_button_enabled_bg">#56A559</color>
+    <color name="draft_button_enabled_text">#FFFFFF</color>
+    <color name="draft_button_disabled_bg">#BF959595</color>
+    <color name="draft_button_disabled_text">#000000</color>
 
     <color name="squad_text_bg">#505050</color>
     <color name="squad_tune_element_bg">#505050</color>
     <color name="release_button_bg">#4CAF50</color>
+
+    <color name="daily_tune_element_bg">#505050</color>
 </resources>

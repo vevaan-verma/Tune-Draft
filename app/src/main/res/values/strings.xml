@@ -2,13 +2,16 @@
     <string name="app_name">Tune Draft</string>
 
     <string name="billboard_hot_100_button">Billboard Hot 100</string>
-    <string name="inventory_button">Inventory</string>
+    <string name="squad_button">Squad</string>
+    <string name="daily_tune_button">Daily Tune</string>
 
     <string name="tune_drafts_text">Tune Drafts:</string>
     <string name="draft_tune_text">Draft</string>
 
-    <string name="squad_text">Squad</string>
+    <string name="squad_text">Squad:</string>
     <string name="release_tune_text">Release</string>
+
+    <string name="daily_tune_text">Daily Tune</string>
 
     <string name="preference_file_key">com.cladcobra.tunedraft.PREFERENCE_FILE_KEY</string>
     <string name="tune_drafts_key">drafts_remaining</string>

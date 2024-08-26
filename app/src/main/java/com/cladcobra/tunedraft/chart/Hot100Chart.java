@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class Hot100Chart {
 
     private String date;
-    private ArrayList<Hot100ChartData> data;
+    private ArrayList<Hot100ChartElement> data;
 
     // getters and setters
     public String getDate() {
@@ -18,24 +18,27 @@ public class Hot100Chart {
         this.date = date;
     }
 
-    public ArrayList<Hot100ChartData> getData() {
+    public ArrayList<Hot100ChartElement> getData() {
         return data;
     }
 
-    public void setData(ArrayList<Hot100ChartData> data) {
+    public void setData(ArrayList<Hot100ChartElement> data) {
         this.data = data;
     }
 
-    public static class Hot100ChartData {
+    public static class Hot100ChartElement {
 
-        private String song; // must be called "song" to match JSON key
+        @SerializedName("song")
+        private String name;
+
+        @SerializedName("artist")
         private String artist;
 
         @SerializedName("this_week")
-        private int thisWeek;
+        private int thisWeekRank;
 
         @SerializedName("last_week")
-        private Integer lastWeek;
+        private Integer lastWeekRank;
 
         @SerializedName("peak_position")
         private int peakPosition;
@@ -44,19 +47,19 @@ public class Hot100Chart {
         private int weeksOnChart;
 
         // getters and setters
-        public String getTuneName() {
-            return song;
+        public String getName() {
+            return name;
         }
 
-        public void setTuneName(String tuneName) {
-            this.song = tuneName;
+        public void setName(String tuneName) {
+            this.name = tuneName;
         }
 
-        public String getArtist() {
+        public String getRawArtist() {
             return artist;
         }
 
-        public String getArtistFormatted() {
+        public String getArtist() {
             return artist.replace("Featuring", "ft.");
         }
 
@@ -64,20 +67,20 @@ public class Hot100Chart {
             this.artist = artist;
         }
 
-        public int getThisWeek() {
-            return thisWeek;
+        public int getThisWeekRank() {
+            return thisWeekRank;
         }
 
-        public void setThisWeek(int thisWeek) {
-            this.thisWeek = thisWeek;
+        public void setThisWeekRank(int thisWeekRank) {
+            this.thisWeekRank = thisWeekRank;
         }
 
-        public Integer getLastWeek() {
-            return lastWeek;
+        public Integer getLastWeekRank() {
+            return lastWeekRank;
         }
 
-        public void setLastWeek(Integer lastWeek) {
-            this.lastWeek = lastWeek;
+        public void setLastWeekRank(Integer lastWeekRank) {
+            this.lastWeekRank = lastWeekRank;
         }
 
         public int getPeakPosition() {
@@ -95,5 +98,6 @@ public class Hot100Chart {
         public void setWeeksOnChart(int weeksOnChart) {
             this.weeksOnChart = weeksOnChart;
         }
+
     }
 }

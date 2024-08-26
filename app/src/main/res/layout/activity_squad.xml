@@ -7,20 +7,26 @@
         android:layout_height="match_parent"
         tools:context=".SquadActivity">
 
-    <TextView
-            android:text="@string/squad_text"
-            android:layout_width="0dp"
+    <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/squadText"
+            android:id="@+id/topBar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/scrollView"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:gravity="center"
-            android:fontFamily="sans-serif-smallcaps"
-            android:textSize="26sp" />
+            app:layout_constraintBottom_toTopOf="@+id/scrollView">
+
+        <TextView
+                android:text="@string/squad_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/squadText"
+                android:layout_marginStart="16dp"
+                android:gravity="center"
+                android:fontFamily="sans-serif-smallcaps"
+                android:textSize="26sp"
+                android:layout_marginEnd="16dp" />
+    </RelativeLayout>
 
     <ScrollView
             android:layout_width="match_parent"
@@ -39,6 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:id="@+id/squadList" />
+                android:id="@+id/squadList"
+                android:gravity="center" />
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

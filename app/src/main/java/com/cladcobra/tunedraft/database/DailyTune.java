@@ -5,8 +5,9 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "Tune")
-public class Tune {
+// IMPORTANT: relies on the Tune class
+@Entity(tableName = "DailyTune")
+public class DailyTune {
 
     @ColumnInfo(name = "tune_id")
     @PrimaryKey(autoGenerate = true)
@@ -21,17 +22,29 @@ public class Tune {
     @ColumnInfo(name = "tune_rank")
     int rank;
 
+    @ColumnInfo(name = "date")
+    String date;
+
     @Ignore
-    public Tune() {
+    public DailyTune() {
 
     }
 
-    public Tune(String name, String artist, int rank) {
+    public DailyTune(Tune dailyTune, String date) {
 
-        this.id = 0;
+        this.name = dailyTune.getName();
+        this.artist = dailyTune.getArtist();
+        this.rank = dailyTune.getRank();
+        this.date = date;
+
+    }
+
+    public DailyTune(String name, String artist, int rank, String date) {
+
         this.name = name;
         this.artist = artist;
         this.rank = rank;
+        this.date = date;
 
     }
 
@@ -45,6 +58,10 @@ public class Tune {
 
     public int getRank() {
         return rank;
+    }
+
+    public String getDate() {
+        return date;
     }
 
 }

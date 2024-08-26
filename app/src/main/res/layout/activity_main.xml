@@ -39,11 +39,17 @@
                 android:backgroundTint="#FFC107" />
 
         <Button
-                android:text="@string/inventory_button"
+                android:text="@string/squad_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/inventoryButton"
                 android:backgroundTint="#00BCD4" />
+
+        <Button
+                android:text="@string/daily_tune_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/dailyTuneButton" />
 
     </LinearLayout>
 

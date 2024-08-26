@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="data_url">https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/recent.json</string>
+    <string name="latest_chart_url">https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/recent.json</string>
+    <string name="valid_dates_url">https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/valid_dates.json</string>
+    <string name="date_chart_base_url">https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/date/</string>
     <integer name="max_tune_chars">12</integer>
     <integer name="max_artist_chars">20</integer>
     <integer name="max_squad_size">12</integer>

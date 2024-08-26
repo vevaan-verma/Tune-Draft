@@ -20,8 +20,8 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.cladcobra.tunedraft.database.AppDatabase;
 import com.cladcobra.tunedraft.database.Tune;
-import com.cladcobra.tunedraft.database.TuneDatabase;
 import com.cladcobra.tunedraft.res.SessionData;
 import com.cladcobra.tunedraft.util.SquadElementLayout;
 
@@ -32,7 +32,7 @@ import java.util.HashMap;
 public class SquadActivity extends AppCompatActivity {
 
     // data storage
-    private TuneDatabase tuneDatabase;
+    private AppDatabase appDatabase;
     private HashMap<Button, SquadElementLayout> releaseButtonElements;
 
     // UI elements
@@ -71,7 +71,7 @@ public class SquadActivity extends AppCompatActivity {
 
         };
 
-        tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
+        appDatabase = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
         // endregion
@@ -80,7 +80,7 @@ public class SquadActivity extends AppCompatActivity {
 
         // set element variables
         squadText = findViewById(R.id.squadText);
-        updateSquadText();
+        updateSquadSizeText();
 
         // set element backgrounds
         squadText.setBackground(AppCompatResources.getDrawable(this, R.drawable.squad_text_bg));
@@ -93,7 +93,7 @@ public class SquadActivity extends AppCompatActivity {
 
         squadList = findViewById(R.id.squadList);
 
-        tuneDatabase.getAllTunes(tunes -> {
+        appDatabase.getAllTunes(tunes -> {
 
             for (Tune tune : tunes) {
 
@@ -142,7 +142,7 @@ public class SquadActivity extends AppCompatActivity {
 
                 releaseButton.setOnClickListener(v -> {
 
-                    tuneDatabase.removeTune(tune); // remove tune from database and update squad text when tune is removed
+                    appDatabase.removeTune(tune); // remove tune from database and update squad text when tune is removed
                     SessionData.decrementSquadSize(); // decrement squad size
 
                     SquadElementLayout elementLayout = releaseButtonElements.get(releaseButton);
@@ -153,7 +153,7 @@ public class SquadActivity extends AppCompatActivity {
                         squadList.removeView(elementLayout.getLayout());
                         squadList.removeView(elementLayout.getSpace());
 
-                        updateSquadText();
+                        updateSquadSizeText();
 
                     }
                 });
@@ -230,12 +230,13 @@ public class SquadActivity extends AppCompatActivity {
 
             }
         });
+
     }
 
     // region UI UTILITIES
-    private void updateSquadText() {
+    private void updateSquadSizeText() {
 
-        squadText.setText(String.format("%s (%s/%s)", getResources().getString(R.string.squad_text), SessionData.getSquadSize(), getResources().getInteger(R.integer.max_squad_size)));
+        squadText.setText(String.format("%s %s/%s", getResources().getString(R.string.squad_text), SessionData.getSquadSize(), getResources().getInteger(R.integer.max_squad_size)));
 
     }
     // endregion

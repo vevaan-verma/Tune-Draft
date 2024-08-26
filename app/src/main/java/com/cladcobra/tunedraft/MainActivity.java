@@ -15,7 +15,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import com.cladcobra.tunedraft.database.TuneDatabase;
+import com.cladcobra.tunedraft.database.AppDatabase;
 import com.cladcobra.tunedraft.res.SessionData;
 
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
         };
 
-        TuneDatabase tuneDatabase = Room.databaseBuilder(getApplicationContext(), TuneDatabase.class, "tune-database")
+        AppDatabase appDatabase = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "tune-database")
                 .addCallback(callback)
                 .build();
 
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         // endregion
 
         // initialize session data from data storage
-        tuneDatabase.getAllTunes(tunes -> SessionData.setSquadSize(tunes.size())); // initialize squad size from database
+        appDatabase.getAllTunes(tunes -> SessionData.setSquadSize(tunes.size())); // initialize squad size from database
         SessionData.setTuneDrafts(sharedPrefs.getInt(getResources().getString(R.string.tune_drafts_key), 0)); // initialize tune drafts from shared preferences
 
         // region BUTTONS
@@ -81,6 +81,14 @@ public class MainActivity extends AppCompatActivity {
         inventoryButton.setOnClickListener(v -> {
 
             Intent intent = new Intent(this, SquadActivity.class);
+            startActivity(intent);
+
+        });
+
+        Button dailyTuneButton = findViewById(R.id.dailyTuneButton);
+        dailyTuneButton.setOnClickListener(v -> {
+
+            Intent intent = new Intent(this, DailyTuneActivity.class);
             startActivity(intent);
 
         });
