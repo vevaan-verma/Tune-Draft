@@ -24,6 +24,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.cladcobra.tunedraft.chart.Hot100Chart;
 import com.cladcobra.tunedraft.database.AppDatabase;
 import com.cladcobra.tunedraft.database.DailyTune;
+import com.cladcobra.tunedraft.database.Tune;
 import com.cladcobra.tunedraft.listener.DailyTuneRetrievalListener;
 import com.cladcobra.tunedraft.res.SessionData;
 import com.google.gson.Gson;
@@ -36,6 +37,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -43,6 +45,7 @@ public class DailyTuneActivity extends AppCompatActivity {
 
     // data storage
     private AppDatabase appDatabase;
+    private HashMap<Button, Tune> draftButtons;
 
     // UI elements
     private ProgressBar progressBar;
@@ -84,6 +87,8 @@ public class DailyTuneActivity extends AppCompatActivity {
                 .addCallback(callback)
                 .build();
         // endregion
+
+        draftButtons = new HashMap<>();
 
         // set element variables
         progressBar = findViewById(R.id.dailyTuneProgressBar);
@@ -217,6 +222,8 @@ public class DailyTuneActivity extends AppCompatActivity {
         // layout order: rank text -> daily tune info layout -> draft button
         // CONVENTION: create the most nested elements first | create the elements on the side first, then create the middle element and constrain it to the side elements
 
+        Tune tune = new Tune(dailyTune.getName(), dailyTune.getArtist(), dailyTune.getRank());
+
         // region RANK TEXT
         TextView rankText = new TextView(this);
         rankText.setText(String.format("#%s", dailyTune.getRank()));
@@ -258,17 +265,11 @@ public class DailyTuneActivity extends AppCompatActivity {
 
         draftButton.setOnClickListener(v -> {
 
-            if (SessionData.getTuneDrafts() > 0) { // make sure there are tune drafts remaining
+            appDatabase.addTune(tune); // add tune to database
+            SessionData.incrementSquadSize(); // increment squad tunes
+            disableDraftButton(draftButton); // disable draft button after click (prevents double clicking as draft button updates are async and may not be immediate)
+            updateDraftButtonStates(); // update draft button states
 
-//                appDatabase.addTune(tune); // add tune to database
-//
-//                SessionData.decrementTuneDrafts(); // decrement tune drafts
-//                SessionData.incrementSquadSize(); // increment squad tunes
-//
-//                updateDraftButtonStates(); // update draft button states
-//                updateTuneDraftsText(); // update tune drafts text
-
-            }
         });
         // endregion
 
@@ -331,9 +332,27 @@ public class DailyTuneActivity extends AppCompatActivity {
         dailyTuneLayout.addView(dailyTuneElementLayout); // add tune element layout to tune list
         // endregion
 
+        draftButtons.put(draftButton, tune); // add button & its tune to hashmap of draft buttons
+        updateDraftButtonStates(); // update draft button states at the very end
+
     }
 
     // region UI UTILITIES
+    private void updateDraftButtonStates() {
+
+        // disable all buttons if squad is full
+        if (SessionData.getSquadSize() >= getResources().getInteger(R.integer.max_squad_size))
+            draftButtons.forEach(
+                    (key, value) -> disableDraftButton(key)
+            );
+
+        // disable button if tune already exists in database
+        draftButtons.forEach((button, tune) -> appDatabase.containsTune(tune, tuneExists -> {
+            if (tuneExists) disableDraftButton(button);
+        }));
+
+    }
+
     private void enableDraftButton(Button button) {
 
         button.setEnabled(true);
