@@ -313,8 +313,7 @@ public class Hot100Activity extends AppCompatActivity {
     }
 
     // TODO: add connection request failure error feedback
-    // TODO: progress bar covers daily tune text when loading in daily tune activity
-    // TODO: tune drafts don't save to shared preferences correctly
+    // TODO: show none text if inventory is empty
 
     // region UI UTILITIES
     private void updateDraftButtonStates() {

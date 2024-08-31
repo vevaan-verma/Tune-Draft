@@ -7,51 +7,67 @@
         android:layout_height="match_parent"
         tools:context=".DailyTuneActivity">
 
-    <ProgressBar
-            style="?android:attr/progressBarStyle"
-            android:layout_width="wrap_content"
+    <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/dailyTuneProgressBar"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:id="@+id/headerLayout"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:visibility="visible"
-            tools:visibility="invisible" />
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+        <TextView
+                android:text="@string/daily_tune_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/dailyTuneText"
+                android:textSize="28sp"
+                android:fontFamily="@font/rem"
+                android:gravity="center" />
+    </RelativeLayout>
+
+    <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/constraintLayout">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/linearLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="64dp"
+            android:layout_marginBottom="32dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="center_horizontal">
 
         <LinearLayout
                 android:orientation="vertical"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:id="@+id/dailyTuneLayout"
-                android:layout_marginEnd="16dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginBottom="32dp"
-                android:layout_marginTop="32dp"
                 android:gravity="center">
 
-            <TextView
-                    android:text="@string/daily_tune_text"
+            <ProgressBar
+                    style="?android:attr/progressBarStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/dailyTuneText"
-                    android:textSize="28sp"
-                    android:fontFamily="@font/rem" />
-
-            <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="16dp" />
+                    android:id="@+id/dailyTuneProgressBar"
+                    android:visibility="visible"
+                    tools:visibility="invisible" />
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <Space
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:id="@+id/space" />
+
+        <CalendarView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/calendarView" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,22 +10,22 @@
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/topBar"
+            android:id="@+id/headerLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/scrollView">
+            app:layout_constraintBottom_toTopOf="@+id/scrollView"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp">
 
         <TextView
                 android:text="@string/squad_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/squadText"
-                android:layout_marginStart="16dp"
                 android:gravity="center"
                 android:fontFamily="sans-serif-smallcaps"
-                android:textSize="26sp"
-                android:layout_marginEnd="16dp" />
+                android:textSize="26sp" />
     </RelativeLayout>
 
     <ScrollView

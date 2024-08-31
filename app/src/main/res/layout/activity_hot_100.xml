@@ -7,36 +7,24 @@
         android:layout_height="match_parent"
         tools:context=".Hot100Activity">
 
-    <ProgressBar
-            style="?android:attr/progressBarStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/chartProgressBar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:visibility="visible"
-            tools:visibility="invisible" />
-
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:id="@+id/topBar"
-            app:layout_constraintBottom_toTopOf="@+id/scrollView">
+            android:id="@+id/headerLayout"
+            app:layout_constraintBottom_toTopOf="@+id/scrollView"
+            android:background="@drawable/tune_drafts_text_bg"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp">
 
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/headerLayout"
-                android:gravity="center"
-                android:background="@drawable/tune_drafts_text_bg"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp">
+                android:id="@+id/infoLayout"
+                android:gravity="center">
 
             <TextView
                     android:text="@string/tune_drafts_text"
@@ -77,7 +65,16 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:id="@+id/chartList"
-                android:gravity="center" />
+                android:gravity="center_horizontal">
+
+            <ProgressBar
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/chartProgressBar"
+                    android:visibility="visible"
+                    tools:visibility="invisible" />
+        </LinearLayout>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
